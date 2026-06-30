@@ -15,7 +15,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from flow_memory.storage import get_backend
-from eduflow.memory import items as _items
+from flow_memory import items as _items
 
 _HIGH_IMPACT_KINDS = frozenset({
     "workflow_rule", "role_rule", "runtime_rule",
@@ -261,7 +261,7 @@ def promote_candidate(
 
     # Sync vector index explicitly (add_memory also does it; this is defensive)
     try:
-        from eduflow.memory.vector_store import index_memory
+        from flow_memory.vector_store import index_memory
         created = _items.get_memory(mid)
         if created:
             index_memory(

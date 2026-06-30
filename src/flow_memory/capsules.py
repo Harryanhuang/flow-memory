@@ -72,19 +72,54 @@ def get_capsule(task_id: str) -> dict | None:
     return dict(row) if row else None
 
 
+# ── Host-supplied task provider callback ──────────────────────────
+#
+# Hosts (e.g. EduFlow Team) register their own task store via
+# register_task_provider(). This makes refresh_from_task_store() pluggable
+# without coupling flow_memory to any specific task store implementation.
+#
+# Example (in EduFlow):
+#     from flow_memory.capsules import register_task_provider
+#     from eduflow.store import tasks
+#     register_task_provider(tasks.get)
+
+_task_provider = None  # type: callable | None
+
+
+def register_task_provider(provider) -> None:
+    """Register a callable that returns a task dict given a task_id.
+
+    Args:
+        provider: callable(task_id: str) -> dict | None
+    """
+    global _task_provider
+    _task_provider = provider
+
+
+def get_task_provider():
+    """Return the currently registered task provider, or None."""
+    return _task_provider
+
+
+def clear_task_provider() -> None:
+    """Remove the registered task provider."""
+    global _task_provider
+    _task_provider = None
+
+
 def refresh_from_task_store(task_id: str) -> dict | None:
-    """Read a task from tasks.json and rebuild its capsule.
+    """Read a task from an external task store and rebuild its capsule.
 
     Returns the capsule dict, or None if task not found / not a flow task.
-    """
-    try:
-        from eduflow.store import tasks as _tasks
-    except ImportError:
-        return None
 
-    # Read task directly via the store's public API
+    Hosts (e.g. EduFlow) register their task store via ``register_task_provider()``.
+    When no provider is registered, this function returns None (graceful fallback).
+    """
+    provider = get_task_provider()
+    if provider is None:
+        return None
     try:
-        task = _tasks.get(task_id)
+        task = provider(task_id)
     except Exception:
         return None
     if task is None:

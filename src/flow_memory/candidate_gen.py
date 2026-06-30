@@ -44,7 +44,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from eduflow.memory.candidates import (
+from flow_memory.candidates import (
     add_candidate as _add_candidate,
     list_candidates as _list_candidates,
     promote_candidate as _promote_candidate,
@@ -249,7 +249,7 @@ def generate_from_event(
     # V3 P2-1: admission gate scoring
     if apply_admission_gate:
         try:
-            from eduflow.memory.admission import score_candidate, ADMISSION_THRESHOLD
+            from flow_memory.admission import score_candidate, ADMISSION_THRESHOLD
             score_result = score_candidate(
                 content=content,
                 source_type=source_type,

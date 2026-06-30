@@ -94,14 +94,14 @@ def add_memory(
     conn.commit()
     # Sync FTS index
     try:
-        from eduflow.memory.search import sync_fts
+        from flow_memory.search import sync_fts
         sync_fts(mid, content.strip(), summary)
     except Exception:
         pass  # best-effort: FTS sync failure should not block inserts
     # Sync vector index (best-effort)
     if status == "confirmed":
         try:
-            from eduflow.memory.vector_store import index_memory
+            from flow_memory.vector_store import index_memory
             index_memory(
                 mid,
                 content.strip(),
@@ -239,7 +239,7 @@ def deprecate_memory(memory_id: str, *, reason: str = "") -> bool:
     conn.commit()
     # Sync vector index (best-effort removal)
     try:
-        from eduflow.memory.vector_store import remove_from_index
+        from flow_memory.vector_store import remove_from_index
         remove_from_index(memory_id)
     except Exception:
         pass
@@ -272,7 +272,7 @@ def supersede_memory(old_id: str, new_id: str) -> bool:
     conn.commit()
     # Sync vector index: remove old vector (best-effort)
     try:
-        from eduflow.memory.vector_store import remove_from_index
+        from flow_memory.vector_store import remove_from_index
         remove_from_index(old_id)
     except Exception:
         pass
@@ -314,7 +314,7 @@ def update_memory(memory_id: str, **fields) -> bool:
     conn.commit()
     # Sync FTS index with updated content
     try:
-        from eduflow.memory.search import sync_fts
+        from flow_memory.search import sync_fts
         updated = get_memory(memory_id)
         if updated:
             sync_fts(memory_id, updated.get("content", ""), updated.get("summary", ""))
@@ -322,7 +322,7 @@ def update_memory(memory_id: str, **fields) -> bool:
         pass
     # Sync vector index (best-effort)
     try:
-        from eduflow.memory.vector_store import index_memory
+        from flow_memory.vector_store import index_memory
         updated = get_memory(memory_id)
         if updated and updated.get("status") == "confirmed":
             index_memory(

@@ -80,7 +80,7 @@ def _assemble(agent: str, task_id: str | None, injection_point: str) -> str:
     module is unavailable — callers then degrade to pass-through.
     """
     try:
-        from eduflow.memory.packet import assemble_memory_packet
+        from flow_memory.packet import assemble_memory_packet
     except ImportError:
         _log.debug("memory.packet unavailable; inject is pass-through")
         return ""
@@ -116,7 +116,7 @@ def inject_to_send(agent: str, message: str) -> str:
     if not message:
         return message
     try:
-        from eduflow.memory.packet import extract_task_id_from_message
+        from flow_memory.packet import extract_task_id_from_message
         task_id = extract_task_id_from_message(message)
     except ImportError:
         task_id = None
@@ -195,8 +195,8 @@ def build_gate_check(
         "packet": "",
     }
     try:
-        from eduflow.memory.constraints import query_for_agent
-        from eduflow.memory.packet import assemble_memory_packet
+        from flow_memory.constraints import query_for_agent
+        from flow_memory.packet import assemble_memory_packet
     except ImportError:
         _log.warning(
             "gate_check: memory module unavailable; fail-open "

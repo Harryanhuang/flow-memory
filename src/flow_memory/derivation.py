@@ -27,7 +27,7 @@ def on_revision_priority_set(
     if not priority:
         return
     try:
-        from eduflow.memory.constraints import add_constraint
+        from flow_memory.constraints import add_constraint
     except ImportError:
         return
 
@@ -67,7 +67,7 @@ def on_authoritative_verdict_fail(
         return
 
     try:
-        from eduflow.memory.constraints import add_constraint
+        from flow_memory.constraints import add_constraint
     except ImportError:
         return
 
@@ -101,7 +101,7 @@ def on_closeout_completed(task_id: str) -> None:
     Called from manager_closeout_subject() after closeout_status is set.
     """
     try:
-        from eduflow.memory.constraints import list_constraints, deactivate_constraint
+        from flow_memory.constraints import list_constraints, deactivate_constraint
     except ImportError:
         return
 

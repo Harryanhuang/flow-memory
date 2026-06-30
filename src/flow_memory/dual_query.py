@@ -31,7 +31,7 @@ def dual_query_memories(
       - "background": matched workflow/project scope
       - "both": matched both
     """
-    from eduflow.memory.search import search_memories
+    from flow_memory.search import search_memories
 
     # Path 1: topic query
     topic_results = []
@@ -52,7 +52,7 @@ def dual_query_memories(
         bg_scopes.append(f"lane:{lane}")
 
     if bg_scopes:
-        from eduflow.memory.items import list_memories
+        from flow_memory.items import list_memories
         for bg_scope in bg_scopes:
             scope_items = list_memories(
                 scope=bg_scope,

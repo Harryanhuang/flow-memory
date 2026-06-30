@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  release:
+    name: Release v${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for PyPI trusted publishing
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Update version in pyproject.toml
+        run: |
+          sed -i "s/^version = .*/version = \"${{ steps.version.outputs.VERSION }}\"/" pyproject.toml
+
+      - name: Build distribution
+        run: |
+          python -m build
+
+      - name: Verify built artifacts
+        run: |
+          ls -la dist/
+          python -m twine check dist/*
+
+      - name: Publish to TestPyPI
+        run: python -m twine upload --repository testpypi dist/* --non-interactive
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN }}
+
+      - name: Publish to PyPI
+        run: python -m twine upload dist/* --non-interactive
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Flow Memory ${{ steps.version.outputs.VERSION }}
+          body: |
+            See [CHANGELOG.md](https://github.com/flow-memory/flow-memory/blob/main/CHANGELOG.md) for details.
+
+            ## Installation
+
+            ```bash
+            pip install flow-memory
+            ```
+
+            ## Or with extras
+
+            ```bash
+            pip install flow-memory[mcp]       # MCP server support
+            pip install flow-memory[vector]    # LanceDB vector search
+            pip install flow-memory[postgres]  # Postgres backend
+            pip install flow-memory[all]       # Everything
+            ```
+          draft: false
+          prerelease: false

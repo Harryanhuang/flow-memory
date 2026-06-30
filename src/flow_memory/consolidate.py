@@ -49,7 +49,7 @@ def find_similar_pairs(
 
     # Try vector-store based detection
     try:
-        from eduflow.memory.vector_store import search_similar
+        from flow_memory.vector_store import search_similar
     except ImportError:
         return []
 
@@ -158,7 +158,7 @@ def merge_memories(
 
     # Create supersedes link
     try:
-        from eduflow.memory.links import add_link
+        from flow_memory.links import add_link
         add_link(keep_id, drop_id, "supersedes")
     except Exception:
         pass
@@ -167,7 +167,7 @@ def merge_memories(
 
     # Remove from vector index
     try:
-        from eduflow.memory.vector_store import remove_from_index
+        from flow_memory.vector_store import remove_from_index
         remove_from_index(drop_id)
     except Exception:
         pass

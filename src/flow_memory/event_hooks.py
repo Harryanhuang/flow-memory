@@ -23,7 +23,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from eduflow.memory.candidate_gen import generate_from_event
+from flow_memory.candidate_gen import generate_from_event
 
 _log = logging.getLogger(__name__)
 

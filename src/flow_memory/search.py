@@ -168,7 +168,7 @@ def hybrid_search(
     # Vector pass (best-effort)
     vec_results = []
     try:
-        from eduflow.memory.vector_store import search_similar
+        from flow_memory.vector_store import search_similar
         vec_results = search_similar(query, top_k=vector_top_k)
     except Exception:
         vec_results = []
@@ -193,7 +193,7 @@ def hybrid_search(
 
     sorted_ids = sorted(rrf_scores.keys(), key=lambda x: rrf_scores[x], reverse=True)
 
-    from eduflow.memory.items import get_memory as _get_memory
+    from flow_memory.items import get_memory as _get_memory
     hydrated: list[dict] = []
     for mid in sorted_ids[:limit]:
         row = _get_memory(mid)

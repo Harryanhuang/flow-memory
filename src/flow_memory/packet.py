@@ -90,9 +90,9 @@ def _render_memories(agent: str, task_id: str | None) -> tuple[list[str], set[st
     recall may supplement.
     """
     try:
-        from eduflow.memory.items import list_memories, list_pinned_memories
-        from eduflow.memory.scope_aliases import resolve_alias
-        from eduflow.memory.decay import effective_confidence, touch_item
+        from flow_memory.items import list_memories, list_pinned_memories
+        from flow_memory.scope_aliases import resolve_alias
+        from flow_memory.decay import effective_confidence, touch_item
     except ImportError:
         return [], set()
 
@@ -174,7 +174,7 @@ def _semantic_recall(
     is tight.
     """
     try:
-        from eduflow.memory.vector_store import search_similar
+        from flow_memory.vector_store import search_similar
     except ImportError:
         return []
 
@@ -226,7 +226,7 @@ def _dual_query_recall(
     recalled by scope match. Source annotation: [topic], [background], [both].
     """
     try:
-        from eduflow.memory.dual_query import dual_query_memories
+        from flow_memory.dual_query import dual_query_memories
     except ImportError:
         return []
 
@@ -239,7 +239,7 @@ def _dual_query_recall(
     lane = None
     if task_id:
         try:
-            from eduflow.memory.capsules import get_capsule
+            from flow_memory.capsules import get_capsule
             cap = get_capsule(task_id)
             if cap:
                 workflow_id = cap.get("workflow_id") or None
@@ -279,7 +279,7 @@ def _build_semantic_query(agent: str, task_id: str | None) -> str:
     """Build a query string from capsule or agent context."""
     if task_id:
         try:
-            from eduflow.memory.capsules import get_capsule
+            from flow_memory.capsules import get_capsule
             cap = get_capsule(task_id)
             if cap:
                 parts: list[str] = []
@@ -295,7 +295,7 @@ def _build_semantic_query(agent: str, task_id: str | None) -> str:
     # No task_id or capsule: use agent identity + relevant constraint content
     query_parts: list[str] = [f"agent:{agent}"]
     try:
-        from eduflow.memory.constraints import query_for_agent
+        from flow_memory.constraints import query_for_agent
         constraints = query_for_agent(agent, task_id=task_id)[:3]
         for c in constraints:
             content = c.get("content", "")
@@ -325,9 +325,9 @@ def assemble_memory_packet(
     of where the packet will be injected.
     """
     try:
-        from eduflow.memory.constraints import query_for_agent
+        from flow_memory.constraints import query_for_agent
         from flow_memory.storage import get_backend
-        from eduflow.memory.capsules import get_capsule, refresh_from_task_store
+        from flow_memory.capsules import get_capsule, refresh_from_task_store
     except ImportError:
         return ""
 

@@ -56,7 +56,7 @@ def submit_reflection(
         reason = learning.get("reason", "")
 
         # Use add_candidate via memory_candidates module
-        from eduflow.memory.candidates import add_candidate
+        from flow_memory.candidates import add_candidate
         cid = add_candidate(
             scope=scope,
             kind=kind,

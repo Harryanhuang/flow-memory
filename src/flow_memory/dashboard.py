@@ -104,7 +104,7 @@ def get_candidate_quality_distribution() -> dict:
 def get_similar_pair_count(threshold: float = 0.85) -> int:
     """Count of similar-pair candidates (advisory only, best-effort)."""
     try:
-        from eduflow.memory.consolidate import find_similar_pairs
+        from flow_memory.consolidate import find_similar_pairs
         pairs = find_similar_pairs(threshold=threshold, limit_pairs=1000)
         return len(pairs)
     except Exception:

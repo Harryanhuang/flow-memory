@@ -75,7 +75,7 @@ def bridge_review_event(review_result: dict[str, Any]) -> str | None:
     if not task_id:
         return None
     try:
-        from eduflow.memory.event_hooks import on_review_rejected
+        from flow_memory.event_hooks import on_review_rejected
     except ImportError:
         _log.warning("event_bridge: event_hooks unavailable")
         return None
@@ -127,7 +127,7 @@ def bridge_closeout_check(
 
     if not consistent:
         try:
-            from eduflow.memory.event_hooks import on_closeout_anomaly
+            from flow_memory.event_hooks import on_closeout_anomaly
         except ImportError:
             _log.warning("event_bridge: event_hooks unavailable")
         else:
@@ -145,7 +145,7 @@ def bridge_closeout_check(
     # 2. Gate check (always — even consistent closeouts can be blocked)
     if agent:
         try:
-            from eduflow.memory.inject import build_gate_check
+            from flow_memory.inject import build_gate_check
             gate = build_gate_check(agent, task_id, gate_name="closeout")
             result["blocking_constraints"] = gate.get("blocking_constraints", [])
         except Exception:
@@ -173,7 +173,7 @@ def bridge_manager_correction(
     if not agent or not content:
         return None
     try:
-        from eduflow.memory.event_hooks import on_manager_correction
+        from flow_memory.event_hooks import on_manager_correction
     except ImportError:
         _log.warning("event_bridge: event_hooks unavailable")
         return None
@@ -208,7 +208,7 @@ def _count_prior_failures(workflow_id: str) -> int:
     failure, not that we miss the pattern entirely.
     """
     try:
-        from eduflow.memory.candidate_gen import list_candidates
+        from flow_memory.candidate_gen import list_candidates
         existing = list_candidates(
             scope=f"workflow:{workflow_id}",
             status="proposed",
@@ -273,7 +273,7 @@ def bridge_task_lifecycle(
         reasons = [ctx["failure_reason"]]
     reason_text = reasons[0] if reasons else "no reason given"
     try:
-        from eduflow.memory.candidate_gen import add_candidate
+        from flow_memory.candidate_gen import add_candidate
         add_candidate(
             scope=f"workflow:{workflow_id}",
             kind="mistake",
@@ -305,7 +305,7 @@ def bridge_task_lifecycle(
     # source_ref="workflow:X"), so repeated calls with the same
     # failure count don't spam the queue.
     try:
-        from eduflow.memory.event_hooks import on_task_failure_pattern
+        from flow_memory.event_hooks import on_task_failure_pattern
     except ImportError:
         _log.warning("event_bridge: event_hooks unavailable")
         return None

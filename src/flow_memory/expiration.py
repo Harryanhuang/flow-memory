@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from flow_memory.storage import get_backend
-from eduflow.memory import candidates as _candidates
+from flow_memory import candidates as _candidates
 
 
 def _now_iso() -> str:

@@ -13,7 +13,7 @@ This module provides:
 from __future__ import annotations
 
 from flow_memory.storage import get_backend
-from eduflow.memory.items import list_memories
+from flow_memory.items import list_memories
 
 
 def get_recent_decisions(scope: str | None = None, limit: int = 10) -> list[dict]:

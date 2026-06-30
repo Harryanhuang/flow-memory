@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flow-memory"
+version = "0.1.0"
+description = "A SQLite/Postgres/file-backed memory system for AI agents with V2/V3 features (user profile, sensitive data, pin/decay, subject, dual query, dashboard, AGENTS.md generation)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [
+    { name = "Flow Memory Authors" },
+]
+keywords = [
+    "memory", "agent", "ai", "mcp", "sqlite", "postgres", "obsidian",
+    "knowledge-graph", "multi-agent",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "cryptography>=41.0",
+]
+
+[project.optional-dependencies]
+vector = ["lancedb>=0.4", "sentence-transformers>=2.2"]
+postgres = ["psycopg[binary]>=3.1"]
+mcp = ["mcp>=1.0"]
+server = ["fastapi>=0.100", "uvicorn>=0.23"]
+all = ["lancedb>=0.4", "sentence-transformers>=2.2", "psycopg[binary]>=3.1", "mcp>=1.0", "fastapi>=0.100", "uvicorn>=0.23"]
+
+[project.scripts]
+flow-memory = "flow_memory.cli:main"
+flow-mcp = "flow_memory.mcp_server:main"
+
+[project.urls]
+Homepage = "https://github.com/flow-memory/flow-memory"
+Repository = "https://github.com/flow-memory/flow-memory"
+Issues = "https://github.com/flow-memory/flow-memory/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+flow_memory = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"

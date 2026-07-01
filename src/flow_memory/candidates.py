@@ -109,6 +109,12 @@ def add_candidate(
         ),
     )
     conn.commit()
+    # Phase 3: record write event
+    try:
+        from flow_memory.memory.usage_stats import record_write
+        record_write(kind=kind, scope=scope, memory_id=cid)
+    except Exception:
+        pass
     return cid
 
 

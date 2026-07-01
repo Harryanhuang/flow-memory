@@ -70,6 +70,12 @@ def set_profile(
         (key, serialized, value_type, confidence, json.dumps(evidence_refs or []), now),
     )
     conn.commit()
+    # Phase 3: record profile write
+    try:
+        from flow_memory.memory.usage_stats import record_write
+        record_write(kind=f"profile:{value_type}", scope=f"profile:{key}")
+    except Exception:
+        pass
 
 
 def get_profile(key: str) -> dict | None:

@@ -84,6 +84,7 @@ class SqliteBackend(StorageBackend):
         content         TEXT NOT NULL,
         summary         TEXT DEFAULT '',
         source_ref      TEXT DEFAULT '',
+        source_agent    TEXT DEFAULT 'unknown',
         evidence_refs   TEXT DEFAULT '[]',
         confidence      REAL DEFAULT 1.0,
         importance      INTEGER DEFAULT 5,
@@ -109,6 +110,7 @@ class SqliteBackend(StorageBackend):
         candidate_id    TEXT PRIMARY KEY,
         source_type     TEXT NOT NULL,
         source_ref      TEXT DEFAULT '',
+        source          TEXT DEFAULT 'unknown',
         proposed_layer  TEXT DEFAULT 'episode',
         proposed_scope  TEXT NOT NULL,
         proposed_kind   TEXT NOT NULL,
@@ -243,12 +245,17 @@ class SqliteBackend(StorageBackend):
         conn = self._get_conn()
         conn.executescript(self._SCHEMA_SQL)
         conn.executescript(self._INDEXES)
-        # Migrations
-        try:
-            conn.execute("ALTER TABLE memory_items ADD COLUMN pinned INTEGER DEFAULT 0")
-            conn.commit()
-        except Exception:
-            pass  # column already exists
+        # Migrations (idempotent — each wrapped in try/except)
+        for migration_sql in [
+            "ALTER TABLE memory_items ADD COLUMN pinned INTEGER DEFAULT 0",
+            "ALTER TABLE memory_items ADD COLUMN source_agent TEXT DEFAULT 'unknown'",
+            "ALTER TABLE memory_candidates ADD COLUMN source TEXT DEFAULT 'unknown'",
+        ]:
+            try:
+                conn.execute(migration_sql)
+                conn.commit()
+            except Exception:
+                pass  # column already exists
         # FTS5 if available
         try:
             conn.executescript(self._FTS_TABLE)

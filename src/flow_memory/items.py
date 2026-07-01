@@ -116,6 +116,12 @@ def add_memory(
             )
         except Exception:
             pass
+    # Phase 3: record write event
+    try:
+        from flow_memory.memory.usage_stats import record_write
+        record_write(kind=kind, scope=scope, memory_id=mid)
+    except Exception:
+        pass
     return mid
 
 
@@ -171,7 +177,14 @@ def pin_memory(memory_id: str) -> bool:
         (now, memory_id),
     )
     conn.commit()
-    return cur.rowcount > 0
+    changed = cur.rowcount > 0
+    if changed:
+        try:
+            from flow_memory.memory.usage_stats import record_write
+            record_write(kind="pin", scope=memory_id, memory_id=memory_id)
+        except Exception:
+            pass
+    return changed
 
 
 def unpin_memory(memory_id: str) -> bool:
@@ -241,6 +254,12 @@ def deprecate_memory(memory_id: str, *, reason: str = "") -> bool:
     try:
         from flow_memory.vector_store import remove_from_index
         remove_from_index(memory_id)
+    except Exception:
+        pass
+    # Phase 3: record
+    try:
+        from flow_memory.memory.usage_stats import record_write
+        record_write(kind="deprecate", scope=memory_id, memory_id=memory_id)
     except Exception:
         pass
     return True

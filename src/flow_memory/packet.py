@@ -92,7 +92,7 @@ def _render_memories(agent: str, task_id: str | None) -> tuple[list[str], set[st
     try:
         from flow_memory.items import list_memories, list_pinned_memories
         from flow_memory.scope_aliases import resolve_alias
-        from flow_memory.decay import effective_confidence, touch_item
+        from flow_memory.decay import effective_confidence
     except ImportError:
         return [], set()
 
@@ -133,11 +133,6 @@ def _render_memories(agent: str, task_id: str | None) -> tuple[list[str], set[st
             importance = m.get("importance", 5)
             lines.append(f"- [📌][{kind}] {summary} (importance={importance})")
             ids.add(mid)
-            # V3 P0-1: touch to mark as recently used
-            try:
-                touch_item(mid)
-            except Exception:
-                pass
 
     # Relevant segment (decayed + sorted)
     if memories:
@@ -152,10 +147,6 @@ def _render_memories(agent: str, task_id: str | None) -> tuple[list[str], set[st
             eff = m.get("effective_confidence", 1.0)
             lines.append(f"- [{kind}] {summary} (eff_conf={eff:.2f}, importance={importance})")
             ids.add(mid)
-            try:
-                touch_item(mid)
-            except Exception:
-                pass
 
     return lines, ids
 

@@ -336,3 +336,68 @@ def expire_stale_candidates() -> int:
     except Exception:
         # Best-effort cleanup: never crash the caller for housekeeping.
         return 0
+
+
+def candidate_status_summary(limit: int = 50) -> dict:
+    """Return a generic summary of pending candidate hygiene.
+
+    Output shape:
+      {
+        "total_proposed": int,
+        "by_source_type": {"manual": 2, ...},
+        "by_kind": {"workflow_rule": 1, ...},
+        "high_impact": int,
+        "expiring_within_7d": int,
+        "placeholder_like": int,
+      }
+    """
+    import json
+    from datetime import datetime, timezone, timedelta
+    from flow_memory.admission import is_placeholder_candidate
+
+    get_backend().init_schema()
+    conn = get_backend().connect()
+    now = _now_iso()
+    soon = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
+
+    rows = conn.execute(
+        "SELECT source_type, proposed_kind, content, risk_flags, expires_at "
+        "FROM memory_candidates WHERE review_status = 'proposed' "
+        "AND expires_at > ? ORDER BY created_at DESC LIMIT ?",
+        (now, limit),
+    ).fetchall()
+
+    by_source: dict[str, int] = {}
+    by_kind: dict[str, int] = {}
+    high_impact = 0
+    expiring_soon = 0
+    placeholder_like = 0
+
+    tax = __import__("flow_memory.policy", fromlist=["get_taxonomy"]).get_taxonomy()
+    high_impact_kinds = tax.high_impact_kinds
+
+    for r in rows:
+        src = r["source_type"] or "unknown"
+        kind = r["proposed_kind"] or "unknown"
+        by_source[src] = by_source.get(src, 0) + 1
+        by_kind[kind] = by_kind.get(kind, 0) + 1
+        risk_flags = []
+        try:
+            risk_flags = json.loads(r["risk_flags"] or "[]")
+        except Exception:
+            pass
+        if kind in high_impact_kinds or "high" in risk_flags:
+            high_impact += 1
+        if (r["expires_at"] or "") <= soon:
+            expiring_soon += 1
+        if is_placeholder_candidate(r["content"]):
+            placeholder_like += 1
+
+    return {
+        "total_proposed": len(rows),
+        "by_source_type": by_source,
+        "by_kind": by_kind,
+        "high_impact": high_impact,
+        "expiring_within_7d": expiring_soon,
+        "placeholder_like": placeholder_like,
+    }

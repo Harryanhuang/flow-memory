@@ -12,6 +12,7 @@ from flow_memory.policy import (
     set_policy,
     set_taxonomy,
 )
+from flow_memory.admission import is_placeholder_candidate, score_candidate
 from flow_memory.policy.taxonomy import get_taxonomy as _get_taxonomy
 from flow_memory.policy.promotion import get_policy as _get_policy
 
@@ -68,3 +69,30 @@ def test_set_custom_promotion_policy():
     assert get_policy().can_promote("workflow_rule", "team", "anyone", True) is True
     # Restore
     set_policy(DefaultPromotionPolicy())
+
+
+def test_is_placeholder_candidate_flags_test_fixtures():
+    assert is_placeholder_candidate("x") is True
+    assert is_placeholder_candidate("pin me") is True
+    assert is_placeholder_candidate("item 0") is True
+    assert is_placeholder_candidate("test rule") is True
+
+
+def test_is_placeholder_candidate_accepts_real_memories():
+    assert is_placeholder_candidate("Always review large refactors") is False
+    assert is_placeholder_candidate("Manager must approve high-risk handoffs") is False
+
+
+def test_score_candidate_with_placeholder_content():
+    """Placeholder content is flagged independently of the numeric score."""
+    assert is_placeholder_candidate("pin me") is True
+    result = score_candidate(
+        content="pin me",
+        source_type="manual",
+        source_ref="",
+        evidence_refs=["task:T-1"],
+        proposed_scope="team",
+        proposed_kind="note",
+    )
+    assert isinstance(result["score"], float)
+    assert 0 <= result["score"] <= 1

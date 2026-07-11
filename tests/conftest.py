@@ -18,10 +18,11 @@ def tmp_db_path(tmp_path):
 def fresh_backend(tmp_db_path, monkeypatch):
     """Return a freshly-initialized SqliteBackend bound to tmp path."""
     from flow_memory.storage import SqliteBackend
+    import flow_memory.storage.sql as sql_mod
 
     backend = SqliteBackend(db_path=tmp_db_path)
     backend.init_schema()
-    monkeypatch.setattr("flow_memory.storage._backend", backend)
+    monkeypatch.setattr(sql_mod, "_backend", backend)
     return backend
 
 

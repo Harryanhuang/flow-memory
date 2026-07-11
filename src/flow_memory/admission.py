@@ -21,6 +21,30 @@ DIMENSION_WEIGHTS = {
 }
 ADMISSION_THRESHOLD = 0.5
 
+# Content markers that strongly indicate a test fixture or placeholder
+# candidate rather than a reusable operational memory.
+_PLACEHOLDER_MARKERS = (
+    "test rule", "new rule", "high imp rule", "domain fact",
+    "pin me", "item 0", "placeholder", "lorem ipsum",
+)
+
+
+def is_placeholder_candidate(content: str) -> bool:
+    """Return True if candidate content looks like a test fixture.
+
+    Conservative: only flags obviously synthetic strings so real (even
+    brief) operational memories are not rejected.
+    """
+    stripped = str(content or "").strip()
+    if len(stripped) <= 3:
+        return True
+    lowered = stripped.lower()
+    if any(marker in lowered for marker in _PLACEHOLDER_MARKERS):
+        return True
+    if len(stripped.split()) == 1 and stripped.islower():
+        return True
+    return False
+
 
 def score_candidate(
     content: str,

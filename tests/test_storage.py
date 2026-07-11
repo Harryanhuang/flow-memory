@@ -123,6 +123,18 @@ def test_default_path_provider_fallback_to_home():
     assert ".flow_memory" in str(provider.memory_db_file())
 
 
+def test_default_path_provider_flow_memory_db_override():
+    """FLOW_MEMORY_DB overrides the default state-dir-based DB path."""
+    import os
+
+    os.environ.pop("FLOW_MEMORY_STATE_DIR", None)
+    os.environ.pop("EDUFLOW_STATE_DIR", None)
+    os.environ["FLOW_MEMORY_DB"] = "/tmp/fm_custom.db"
+    provider = DefaultPathProvider()
+    assert provider.memory_db_file() == Path("/tmp/fm_custom.db")
+    del os.environ["FLOW_MEMORY_DB"]
+
+
 def test_get_backend_returns_default_when_none_set():
     backend = get_backend()
     assert isinstance(backend, SqliteBackend)

@@ -38,6 +38,25 @@ def test_package_has_no_eduflow_runtime_imports() -> None:
     assert offenders == []
 
 
+def test_vector_store_preserves_legacy_public_exports() -> None:
+    vector_store = importlib.import_module("flow_memory.vector_store")
+
+    expected = {
+        "DummyProvider",
+        "EmbeddingProvider",
+        "LanceDBBackend",
+        "SiliconFlowEmbeddingProvider",
+        "VectorBackend",
+        "get_embedding_provider",
+        "get_vector_backend",
+        "reset_embedding_provider",
+        "set_embedding_provider",
+        "use_vector_backend",
+    }
+
+    assert expected <= set(vars(vector_store))
+
+
 def test_cli_init_creates_database(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("FLOW_MEMORY_DB", str(tmp_path / "memory.db"))
     cli = importlib.import_module("flow_memory.cli")

@@ -5,8 +5,19 @@ Backwards-compat module that re-exports from the new abstraction layer.
 
 from __future__ import annotations
 
+from flow_memory.embeddings import (
+    DummyProvider as DummyProvider,
+    EmbeddingProvider as EmbeddingProvider,
+    SiliconFlowEmbeddingProvider as SiliconFlowEmbeddingProvider,
+    get_embedding_provider as get_embedding_provider,
+    reset_embedding_provider as reset_embedding_provider,
+    set_embedding_provider as set_embedding_provider,
+)
 from flow_memory.storage.vector import (
-    get_vector_backend,
+    LanceDBBackend as LanceDBBackend,
+    VectorBackend as VectorBackend,
+    get_vector_backend as get_vector_backend,
+    use_vector_backend as use_vector_backend,
 )
 
 

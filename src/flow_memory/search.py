@@ -3,6 +3,7 @@
 Lazily creates the FTS5 virtual table when available, falls back to LIKE
 on memory_items.content/summary when FTS5 is not compiled in.
 """
+
 from __future__ import annotations
 
 import sqlite3
@@ -54,9 +55,7 @@ def sync_fts(memory_id: str, content: str, summary: str) -> None:
     ensure_fts()
     conn = get_backend().connect()
     # Remove existing entry first (idempotent upsert)
-    conn.execute(
-        "DELETE FROM memory_items_fts WHERE id = ?", (memory_id,)
-    )
+    conn.execute("DELETE FROM memory_items_fts WHERE id = ?", (memory_id,))
     conn.execute(
         "INSERT INTO memory_items_fts (id, content, summary) VALUES (?, ?, ?)",
         (memory_id, content, summary),
@@ -70,9 +69,7 @@ def remove_fts(memory_id: str) -> None:
         return
     conn = get_backend().connect()
     try:
-        conn.execute(
-            "DELETE FROM memory_items_fts WHERE id = ?", (memory_id,)
-        )
+        conn.execute("DELETE FROM memory_items_fts WHERE id = ?", (memory_id,))
         conn.commit()
     except Exception:
         pass  # table may not exist
@@ -107,10 +104,7 @@ def search_memories(
         )
         params: list = [f'"{q}"']
     else:
-        base = (
-            "SELECT * FROM memory_items"
-            " WHERE (content LIKE ? OR summary LIKE ?)"
-        )
+        base = "SELECT * FROM memory_items WHERE (content LIKE ? OR summary LIKE ?)"
         like_pat = f"%{q}%"
         params = [like_pat, like_pat]
 
@@ -169,6 +163,7 @@ def hybrid_search(
     vec_results = []
     try:
         from flow_memory.vector_store import search_similar
+
         vec_results = search_similar(query, top_k=vector_top_k)
     except Exception:
         vec_results = []
@@ -194,6 +189,7 @@ def hybrid_search(
     sorted_ids = sorted(rrf_scores.keys(), key=lambda x: rrf_scores[x], reverse=True)
 
     from flow_memory.items import get_memory as _get_memory
+
     hydrated: list[dict] = []
     for mid in sorted_ids[:limit]:
         row = _get_memory(mid)

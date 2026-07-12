@@ -25,6 +25,7 @@ a no-op pass-through. Gate check returns ``allowed=True`` (fail-open)
 with a warning logged. This ensures memory-system failures cannot
 take down the messaging pipeline.
 """
+
 from __future__ import annotations
 
 import logging
@@ -52,24 +53,12 @@ def _format_prepend(packet: str, message: str) -> str:
     boundary. Without it, the closing marker runs into the message
     body and the agent may misparse where the packet ends.
     """
-    return (
-        f"{_PACKET_OPEN}\n"
-        f"{packet}\n"
-        f"{_PACKET_CLOSE}\n"
-        f"\n"
-        f"{message}"
-    )
+    return f"{_PACKET_OPEN}\n{packet}\n{_PACKET_CLOSE}\n\n{message}"
 
 
 def _format_append(message: str, packet: str) -> str:
     """Wrap ``packet`` as an appended recovery block."""
-    return (
-        f"{message}\n"
-        f"\n"
-        f"{_PACKET_OPEN_RECOVERY}\n"
-        f"{packet}\n"
-        f"{_PACKET_CLOSE}"
-    )
+    return f"{message}\n\n{_PACKET_OPEN_RECOVERY}\n{packet}\n{_PACKET_CLOSE}"
 
 
 def _assemble(agent: str, task_id: str | None, injection_point: str) -> str:
@@ -86,23 +75,31 @@ def _assemble(agent: str, task_id: str | None, injection_point: str) -> str:
         return ""
     try:
         packet = assemble_memory_packet(
-            agent, task_id=task_id, injection_point=injection_point,
+            agent,
+            task_id=task_id,
+            injection_point=injection_point,
         )
         _log.debug(
             "inject assemble agent=%s task=%s point=%s len=%d",
-            agent, task_id, injection_point, len(packet or ""),
+            agent,
+            task_id,
+            injection_point,
+            len(packet or ""),
         )
         return packet or ""
     except Exception:
         # Memory assembly must never crash the messaging pipeline.
         _log.warning(
             "inject assemble failed for agent=%s task=%s",
-            agent, task_id, exc_info=True,
+            agent,
+            task_id,
+            exc_info=True,
         )
         return ""
 
 
 # ── Public API: injection functions ───────────────────────────────
+
 
 def inject_to_send(agent: str, message: str) -> str:
     """Inject Memory Packet before a manager→worker message.
@@ -117,6 +114,7 @@ def inject_to_send(agent: str, message: str) -> str:
         return message
     try:
         from flow_memory.packet import extract_task_id_from_message
+
         task_id = extract_task_id_from_message(message)
     except ImportError:
         task_id = None
@@ -199,9 +197,10 @@ def build_gate_check(
         from flow_memory.packet import assemble_memory_packet
     except ImportError:
         _log.warning(
-            "gate_check: memory module unavailable; fail-open "
-            "agent=%s task=%s gate=%s",
-            agent, task_id, gate_name,
+            "gate_check: memory module unavailable; fail-open agent=%s task=%s gate=%s",
+            agent,
+            task_id,
+            gate_name,
         )
         return empty_result
 
@@ -224,13 +223,15 @@ def build_gate_check(
             # structural gates. Package 1/3 handle task-level gating
             # via derivation, not via this path.
             continue
-        blocking.append({
-            "id": c.get("id", ""),
-            "level": level,
-            "scope": c.get("scope", ""),
-            "content": c.get("content", ""),
-            "gate": gate_name,
-        })
+        blocking.append(
+            {
+                "id": c.get("id", ""),
+                "level": level,
+                "scope": c.get("scope", ""),
+                "content": c.get("content", ""),
+                "gate": gate_name,
+            }
+        )
 
     try:
         packet = assemble_memory_packet(agent, task_id=task_id) or ""

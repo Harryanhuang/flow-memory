@@ -1,7 +1,7 @@
 """Tests for policy modules (taxonomy + promotion)."""
+
 from __future__ import annotations
 
-import pytest
 
 from flow_memory.policy import (
     DefaultPromotionPolicy,
@@ -13,8 +13,6 @@ from flow_memory.policy import (
     set_taxonomy,
 )
 from flow_memory.admission import is_placeholder_candidate, score_candidate
-from flow_memory.policy.taxonomy import get_taxonomy as _get_taxonomy
-from flow_memory.policy.promotion import get_policy as _get_policy
 
 
 def test_default_taxonomy_includes_core_kinds():

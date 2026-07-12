@@ -10,6 +10,7 @@ Inspired by Qoder's "技能进化" (skill evolution) flow:
   3. User/manager accepts / ignores / rejects
   4. Rejected suggestions enter cooldown, won't be re-proposed until cooldown expires
 """
+
 from __future__ import annotations
 
 import json
@@ -23,6 +24,7 @@ def _now_iso() -> str:
 
 
 # ── Suggestion generation ──────────────────────────────────────────
+
 
 def aggregate_frequent_rules(
     *,
@@ -68,15 +70,17 @@ def aggregate_frequent_rules(
             evidence = json.loads(r["evidence_refs"] or "[]")
         except (json.JSONDecodeError, TypeError):
             evidence = []
-        results.append({
-            "id": r["id"],
-            "content": r["content"],
-            "scope": r["scope"],
-            "kind": r["kind"],
-            "importance": r["importance"],
-            "evidence_count": len(evidence),
-            "summary": r["summary"] or "",
-        })
+        results.append(
+            {
+                "id": r["id"],
+                "content": r["content"],
+                "scope": r["scope"],
+                "kind": r["kind"],
+                "importance": r["importance"],
+                "evidence_count": len(evidence),
+                "summary": r["summary"] or "",
+            }
+        )
     return results
 
 
@@ -94,7 +98,9 @@ def generate_suggestions(
     diff_text, cooldown_until (None if not in cooldown)}.
     """
     rules = aggregate_frequent_rules(
-        kinds=kinds, scope=scope, min_importance=min_importance,
+        kinds=kinds,
+        scope=scope,
+        min_importance=min_importance,
         min_age_days=min_age_days,
     )
 
@@ -111,16 +117,18 @@ def generate_suggestions(
         )
         diff_text = _build_diff_text(rule)
 
-        suggestions.append({
-            "rule_id": rule["id"],
-            "content": rule["content"],
-            "scope": rule["scope"],
-            "kind": rule["kind"],
-            "importance": rule["importance"],
-            "rationale": rationale,
-            "diff_text": diff_text,
-            "cooldown_until": None,
-        })
+        suggestions.append(
+            {
+                "rule_id": rule["id"],
+                "content": rule["content"],
+                "scope": rule["scope"],
+                "kind": rule["kind"],
+                "importance": rule["importance"],
+                "rationale": rationale,
+                "diff_text": diff_text,
+                "cooldown_until": None,
+            }
+        )
     return suggestions
 
 
@@ -133,6 +141,7 @@ def _build_diff_text(rule: dict) -> str:
 
 
 # ── Cooldown state machine ─────────────────────────────────────────
+
 
 def _cooldown_table() -> str:
     return "memory_skill_cooldowns"
@@ -172,7 +181,9 @@ def _get_cooldown(rule_id: str) -> str | None:
     return None
 
 
-def reject_suggestion(rule_id: str, *, reason: str = "", cooldown_hours: int = 168) -> None:
+def reject_suggestion(
+    rule_id: str, *, reason: str = "", cooldown_hours: int = 168
+) -> None:
     """Mark a suggestion as rejected; enters cooldown.
 
     If the rule was already rejected, increments reject_count and
@@ -222,7 +233,8 @@ def accept_suggestion(rule_id: str) -> bool:
     _init_cooldown_table()
     conn = get_backend().connect()
     cur = conn.execute(
-        f"DELETE FROM {_cooldown_table()} WHERE rule_id = ?", (rule_id,),
+        f"DELETE FROM {_cooldown_table()} WHERE rule_id = ?",
+        (rule_id,),
     )
     conn.commit()
     return cur.rowcount > 0
@@ -252,6 +264,7 @@ def clear_all_cooldowns() -> int:
 
 # ── CLI helpers ────────────────────────────────────────────────────
 
+
 def render_suggestion_report(
     *,
     kinds: list[str] | None = None,
@@ -261,8 +274,10 @@ def render_suggestion_report(
 ) -> str:
     """Render skill evolution suggestions as a markdown report."""
     suggestions = generate_suggestions(
-        kinds=kinds, scope=scope,
-        min_importance=min_importance, cooldown_hours=cooldown_hours,
+        kinds=kinds,
+        scope=scope,
+        min_importance=min_importance,
+        cooldown_hours=cooldown_hours,
     )
     cooldowns = list_active_cooldowns(limit=20)
 
@@ -275,7 +290,9 @@ def render_suggestion_report(
     lines.append("")
 
     if not suggestions:
-        lines.append("_No new suggestions. All frequent rules either in cooldown or already in AGENTS.md._")
+        lines.append(
+            "_No new suggestions. All frequent rules either in cooldown or already in AGENTS.md._"
+        )
         lines.append("")
     else:
         for i, s in enumerate(suggestions, 1):
@@ -290,7 +307,9 @@ def render_suggestion_report(
             lines.append("```")
             lines.append("")
             lines.append(f"Accept: `eduflow memory skill-evolve accept {s['rule_id']}`")
-            lines.append(f"Reject: `eduflow memory skill-evolve reject {s['rule_id']} --reason \"...\"`")
+            lines.append(
+                f'Reject: `eduflow memory skill-evolve reject {s["rule_id"]} --reason "..."`'
+            )
             lines.append("")
 
     lines.append(f"## Active Cooldowns ({len(cooldowns)})")
@@ -300,7 +319,9 @@ def render_suggestion_report(
         lines.append("")
     else:
         for c in cooldowns:
-            lines.append(f"- `{c['rule_id']}` — until {c['cooldown_until'][:19]} (rejected {c['reject_count']}x)")
+            lines.append(
+                f"- `{c['rule_id']}` — until {c['cooldown_until'][:19]} (rejected {c['reject_count']}x)"
+            )
         lines.append("")
 
     return "\n".join(lines)

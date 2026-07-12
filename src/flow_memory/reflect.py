@@ -9,9 +9,9 @@ planned as a plugin-dependent enhancement. This implementation provides
 the CLI surface and candidate creation so agents can already participate
 in reflection manually.
 """
+
 from __future__ import annotations
 
-import json
 from datetime import datetime, timedelta, timezone
 
 from flow_memory.storage import get_backend
@@ -57,6 +57,7 @@ def submit_reflection(
 
         # Use add_candidate via memory_candidates module
         from flow_memory.candidates import add_candidate
+
         cid = add_candidate(
             scope=scope,
             kind=kind,
@@ -106,8 +107,6 @@ def reflection_stats(days: int = 30) -> dict:
     total = sum(row["cnt"] for row in rows)
     by_status = {row["review_status"]: row["cnt"] for row in rows}
     promoted = by_status.get("promoted", 0)
-    rejected = by_status.get("rejected", 0)
-    proposed = by_status.get("proposed", 0)
     promote_rate = promoted / total if total > 0 else 0.0
     return {
         "total": total,

@@ -18,6 +18,7 @@ Storage backends:
   - PostgresBackend (optional: pip install flow-memory[postgres])
   - MarkdownBackend (filesystem-backed, git-trackable)
 """
+
 from flow_memory.storage import (
     DefaultPathProvider,
     LanceDBBackend,

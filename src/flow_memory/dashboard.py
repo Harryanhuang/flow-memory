@@ -7,6 +7,7 @@ Outputs trends (daily/weekly), high-frequency memories, candidate quality,
 similar-pair counts, and pinned list. Can be printed to CLI or exported
 to Obsidian.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -105,6 +106,7 @@ def get_similar_pair_count(threshold: float = 0.85) -> int:
     """Count of similar-pair candidates (advisory only, best-effort)."""
     try:
         from flow_memory.consolidate import find_similar_pairs
+
         pairs = find_similar_pairs(threshold=threshold, limit_pairs=1000)
         return len(pairs)
     except Exception:
@@ -142,8 +144,10 @@ def render_dashboard(days: int = 7) -> str:
     similar = get_similar_pair_count()
 
     lines = []
-    lines.append(f"# 📊 EduFlow Memory Dashboard")
-    lines.append(f"_Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}_")
+    lines.append("# 📊 EduFlow Memory Dashboard")
+    lines.append(
+        f"_Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}_"
+    )
     lines.append("")
 
     # Trends
@@ -163,7 +167,9 @@ def render_dashboard(days: int = 7) -> str:
     if top:
         for m in top:
             content_preview = m["content"][:60].replace("\n", " ")
-            lines.append(f"- **[{m['id']}]** [{m['kind']}] scope={m['scope']} (imp={m['importance']})")
+            lines.append(
+                f"- **[{m['id']}]** [{m['kind']}] scope={m['scope']} (imp={m['importance']})"
+            )
             lines.append(f"  {content_preview}")
     else:
         lines.append("_No recently touched memories._")
@@ -181,7 +187,7 @@ def render_dashboard(days: int = 7) -> str:
     lines.append("## 🔁 Consolidation")
     lines.append("")
     lines.append(f"- **Similar pairs detected (threshold=0.85)**: {similar}")
-    lines.append(f"  - Run `eduflow memory consolidate --report` for details")
+    lines.append("  - Run `eduflow memory consolidate --report` for details")
     lines.append("")
 
     # Pinned
@@ -192,7 +198,7 @@ def render_dashboard(days: int = 7) -> str:
     for kind, cnt in pinned.get("by_kind", {}).items():
         lines.append(f"  - {kind}: {cnt}")
     lines.append("")
-    lines.append(f"  - Run `eduflow memory pin list` for details")
+    lines.append("  - Run `eduflow memory pin list` for details")
     lines.append("")
 
     return "\n".join(lines)

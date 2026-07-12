@@ -10,9 +10,9 @@ This module provides:
   - get_handoffs: handoff memories for cross-agent context
   - get_facts_by_kind: get memories by kind on demand
 """
+
 from __future__ import annotations
 
-from flow_memory.storage import get_backend
 from flow_memory.items import list_memories
 
 
@@ -56,7 +56,9 @@ def get_handoffs(workflow_id: str | None = None, limit: int = 5) -> list[dict]:
     )
 
 
-def get_facts_by_kind(kind: str, scope: str | None = None, limit: int = 10) -> list[dict]:
+def get_facts_by_kind(
+    kind: str, scope: str | None = None, limit: int = 10
+) -> list[dict]:
     """Generic kind-based recall. Used for any kind not covered by specialized helpers."""
     return list_memories(
         kind=kind,

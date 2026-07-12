@@ -5,6 +5,7 @@ on-disk locations used by the memory subsystem. Hosts can override to
 customize storage layout (e.g. point DB at /var/lib/flow-memory, vector
 index at a different mount, etc.).
 """
+
 from __future__ import annotations
 
 import os

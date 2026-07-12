@@ -6,6 +6,7 @@ Currently supports:
 
 Future: OpenAI, Cohere, local sentence-transformers (via the [vector] extra).
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -77,11 +78,13 @@ class SiliconFlowEmbeddingProvider(EmbeddingProvider):
             import json as _json
 
             url = f"{self.api_base}/embeddings"
-            payload = _json.dumps({
-                "model": self.model,
-                "input": text,
-                "encoding_format": "float",
-            }).encode("utf-8")
+            payload = _json.dumps(
+                {
+                    "model": self.model,
+                    "input": text,
+                    "encoding_format": "float",
+                }
+            ).encode("utf-8")
 
             req = urllib.request.Request(
                 url,

@@ -8,10 +8,9 @@ Eviction priority (first evicted first):
   memory_items:       deprecated → rejected → candidate → confirmed
   memory_candidates:  rejected → proposed → promoted
 """
+
 from __future__ import annotations
 
-import os
-from pathlib import Path
 
 from flow_memory.storage import get_backend
 from flow_memory.storage.paths import get_path_provider
@@ -28,26 +27,27 @@ _MIN_KEEP = 1
 # Status → priority (lower = evict first). Unknown statuses get 99.
 _STATUS_PRIORITY: dict[str, dict[str, int]] = {
     "active_constraints": {"deprecated": 0, "inactive": 1, "active": 2},
-    "memory_items":       {"deprecated": 0, "rejected": 1, "candidate": 2, "confirmed": 3},
-    "memory_candidates":  {"rejected": 0, "proposed": 1, "promoted": 2},
+    "memory_items": {"deprecated": 0, "rejected": 1, "candidate": 2, "confirmed": 3},
+    "memory_candidates": {"rejected": 0, "proposed": 1, "promoted": 2},
 }
 
 # Column used for "oldest" ordering in each table
 _OLDEST_ORDER: dict[str, str] = {
     "active_constraints": "created_at",
-    "memory_items":       "created_at",
-    "memory_candidates":  "created_at",
+    "memory_items": "created_at",
+    "memory_candidates": "created_at",
 }
 
 # Column that holds the status for each table
 _STATUS_COL: dict[str, str] = {
     "active_constraints": "status",
-    "memory_items":       "status",
-    "memory_candidates":  "review_status",
+    "memory_items": "status",
+    "memory_candidates": "review_status",
 }
 
 
 # ── public API ─────────────────────────────────────────────────────
+
 
 def check_budget(table: str) -> dict:
     """Return current row count vs limit for *table*.
@@ -83,7 +83,11 @@ def enforce_budget(table: str) -> dict:
     get_backend().init_schema()
     info = check_budget(table)
     if info["over"] == 0:
-        return {"evicted": 0, "remaining": info["current"], "strategy": "none_under_budget"}
+        return {
+            "evicted": 0,
+            "remaining": info["current"],
+            "strategy": "none_under_budget",
+        }
 
     limit = info["limit"]
     current = info["current"]
@@ -106,9 +110,13 @@ def enforce_budget(table: str) -> dict:
         pinned_clause = "COALESCE(pinned, 0) DESC, "
 
     # Build a CASE expression for ORDER BY
-    when_clauses = " ".join(
-        f"WHEN {status_col} = ? THEN {pri}" for status, pri in sorted(priority_cases.items(), key=lambda x: x[1])
-    ) + " ELSE 99"
+    when_clauses = (
+        " ".join(
+            f"WHEN {status_col} = ? THEN {pri}"
+            for status, pri in sorted(priority_cases.items(), key=lambda x: x[1])
+        )
+        + " ELSE 99"
+    )
     order_sql = f"{pinned_clause}(CASE {when_clauses} END) ASC, {order_col} ASC"
     params = [s for s, _ in sorted(priority_cases.items(), key=lambda x: x[1])]
 
@@ -131,7 +139,9 @@ def enforce_budget(table: str) -> dict:
         return {"evicted": 0, "remaining": current, "strategy": "min_keep_protection"}
 
     placeholders = ",".join("?" for _ in to_evict_ids)
-    conn.execute(f"DELETE FROM {table} WHERE {pk_col} IN ({placeholders})", to_evict_ids)
+    conn.execute(
+        f"DELETE FROM {table} WHERE {pk_col} IN ({placeholders})", to_evict_ids
+    )
     conn.commit()
     remaining = current - len(to_evict_ids)
     return {

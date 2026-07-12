@@ -5,6 +5,7 @@ Constraints are stored in SQLite and queried by scope + level hierarchy:
 
 Query order: team → lane → workflow → task (deduplicated by content).
 """
+
 from __future__ import annotations
 
 import json
@@ -13,10 +14,15 @@ from datetime import datetime, timezone
 from flow_memory.storage import get_backend
 
 _VALID_LEVELS = frozenset({"L0", "L1", "L2", "L3"})
-_VALID_TYPES = frozenset({
-    "must_follow", "must_not", "gate_check",
-    "escalation_rule", "evidence_rule",
-})
+_VALID_TYPES = frozenset(
+    {
+        "must_follow",
+        "must_not",
+        "gate_check",
+        "escalation_rule",
+        "evidence_rule",
+    }
+)
 _VALID_STATUSES = frozenset({"active", "inactive", "deprecated"})
 _VALID_ENFORCEMENTS = frozenset({"prompt_only", "packet_required", "gate_required"})
 
@@ -54,9 +60,13 @@ def add_constraint(
     if level not in _VALID_LEVELS:
         raise ValueError(f"invalid level: {level} (valid: {sorted(_VALID_LEVELS)})")
     if constraint_type not in _VALID_TYPES:
-        raise ValueError(f"invalid type: {constraint_type} (valid: {sorted(_VALID_TYPES)})")
+        raise ValueError(
+            f"invalid type: {constraint_type} (valid: {sorted(_VALID_TYPES)})"
+        )
     if enforcement not in _VALID_ENFORCEMENTS:
-        raise ValueError(f"invalid enforcement: {enforcement} (valid: {sorted(_VALID_ENFORCEMENTS)})")
+        raise ValueError(
+            f"invalid enforcement: {enforcement} (valid: {sorted(_VALID_ENFORCEMENTS)})"
+        )
     if not content.strip():
         raise ValueError("content cannot be empty")
 
@@ -71,10 +81,20 @@ def add_constraint(
             valid_from, valid_until, created_by, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?)""",
         (
-            cid, scope, level, constraint_type, content.strip(),
-            source_ref, json.dumps(evidence_refs or []),
-            enforcement, injection_point,
-            now, valid_until, created_by, now, now,
+            cid,
+            scope,
+            level,
+            constraint_type,
+            content.strip(),
+            source_ref,
+            json.dumps(evidence_refs or []),
+            enforcement,
+            injection_point,
+            now,
+            valid_until,
+            created_by,
+            now,
+            now,
         ),
     )
     conn.commit()
@@ -199,13 +219,11 @@ def query_for_agent(
     level_priority = {"L0": 0, "L1": 1, "L2": 2, "L3": 3}
 
     # Match scopes: team, lane:<agent>, workflow:<agent>, task:<task_id>
-    matched_scopes = {"team"}
     # We don't know lane mapping yet — match any lane scope
     # In practice, lane resolution would come from config; for now
     # we include all L0 team constraints + any L1/L2 that match
     for row in rows:
         scope = row["scope"]
-        level = row["constraint_level"]
         content = row["content"]
 
         scope_match = False
@@ -222,5 +240,7 @@ def query_for_agent(
             result.append(dict(row))
 
     # Sort by level priority, then by created_at
-    result.sort(key=lambda r: (level_priority.get(r["constraint_level"], 9), r["created_at"]))
+    result.sort(
+        key=lambda r: (level_priority.get(r["constraint_level"], 9), r["created_at"])
+    )
     return result

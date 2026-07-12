@@ -5,6 +5,7 @@ These hooks are called from tasks.py when revision_priority is set or
 authoritative verdict is built. They auto-create active constraints so
 workers retain critical rules after context loss.
 """
+
 from __future__ import annotations
 
 import logging
@@ -112,7 +113,8 @@ def on_closeout_completed(task_id: str) -> None:
         if constraints:
             _log.debug(
                 "deactivated %d constraints for closed-out task %s",
-                len(constraints), task_id,
+                len(constraints),
+                task_id,
             )
     except Exception as e:
         _log.warning("failed to deactivate constraints for closeout %s: %s", task_id, e)

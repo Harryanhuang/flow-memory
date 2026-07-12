@@ -5,6 +5,7 @@ recent usage. The decay is computed at read time (packet assembly, search
 output) and never persisted directly — ``memory_items.confidence`` stays
 as the base value; ``effective_confidence`` is derived on demand.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone

@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import importlib
 import ast
-import tomllib
 from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10
+    import tomli as tomllib
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,9 +50,10 @@ def test_cli_add_and_search_round_trip(tmp_path, monkeypatch, capsys) -> None:
     monkeypatch.setenv("FLOW_MEMORY_DB", str(tmp_path / "memory.db"))
     cli = importlib.import_module("flow_memory.cli")
 
-    assert cli.main([
-        "items", "add", "team", "workflow_rule", "verify before release"
-    ]) == 0
+    assert (
+        cli.main(["items", "add", "team", "workflow_rule", "verify before release"])
+        == 0
+    )
     memory_id = capsys.readouterr().out.strip()
     assert memory_id.startswith("MI-")
 
@@ -60,6 +65,7 @@ def test_mcp_server_registers_documented_dashboard_tool() -> None:
     mcp_server = importlib.import_module("flow_memory.mcp_server")
     if mcp_server.mcp is None:
         import pytest
+
         pytest.skip("mcp optional dependency is not installed")
 
     assert "memory_dashboard" in mcp_server.mcp._tool_manager._tools

@@ -39,6 +39,7 @@ Scope resolution (in priority order):
   4. workflow_id only                 → workflow:{workflow_id}
   5. fallthrough                      → team
 """
+
 from __future__ import annotations
 
 import logging
@@ -50,7 +51,6 @@ from flow_memory.candidates import (
     promote_candidate as _promote_candidate,
     reject_candidate as _reject_candidate,
     expire_stale_candidates as _expire_stale_candidates,
-    get_candidate,
 )
 
 _log = logging.getLogger(__name__)
@@ -83,17 +83,35 @@ _SOURCE_DEFAULTS: dict[str, tuple[str, str]] = {
 # Kinds that indicate a process flaw rather than a one-off error.
 # When reject_reason mentions these signals, we upgrade kind from
 # "mistake" to "workflow_rule" (the issue is structural, not personal).
-_PROCESS_FLAW_SIGNALS = frozenset({
-    "process", "procedure", "workflow", "flow",
-    "missing step", "skipped", "handoff", "format",
-    "template", "standard", "protocol",
-})
+_PROCESS_FLAW_SIGNALS = frozenset(
+    {
+        "process",
+        "procedure",
+        "workflow",
+        "flow",
+        "missing step",
+        "skipped",
+        "handoff",
+        "format",
+        "template",
+        "standard",
+        "protocol",
+    }
+)
 
 # Phrases in reject_reason that indicate data integrity concerns.
-_DATA_INTEGRITY_SIGNALS = frozenset({
-    "mismatch", "inconsistent", "data", "count",
-    "missing item", "manifest", "qtl", "qql",
-})
+_DATA_INTEGRITY_SIGNALS = frozenset(
+    {
+        "mismatch",
+        "inconsistent",
+        "data",
+        "count",
+        "missing item",
+        "manifest",
+        "qtl",
+        "qql",
+    }
+)
 
 
 def _infer_scope_kind_layer(
@@ -110,9 +128,7 @@ def _infer_scope_kind_layer(
     ``kind``, ``layer`` keys), those win over inference.
     """
     # Start from source_type defaults
-    default_layer, default_kind = _SOURCE_DEFAULTS.get(
-        source_type, ("episode", "note")
-    )
+    default_layer, default_kind = _SOURCE_DEFAULTS.get(source_type, ("episode", "note"))
     layer = default_layer
     kind = default_kind
     scope = "team"  # conservative fallback
@@ -155,8 +171,7 @@ def _infer_scope_kind_layer(
     # needs fixing, not the worker).
     if source_type == "review_reject":
         reason_text = str(
-            event_ctx.get("reject_reason", "")
-            or event_ctx.get("reason", "")
+            event_ctx.get("reject_reason", "") or event_ctx.get("reason", "")
         ).lower()
         if any(sig in reason_text for sig in _PROCESS_FLAW_SIGNALS):
             kind = "workflow_rule"
@@ -210,6 +225,7 @@ def _is_recurring_review_reject(workflow_id: str) -> bool:
 
 # ── Public: event → candidate ──────────────────────────────────────
 
+
 def generate_from_event(
     source_type: str,
     event_ctx: dict[str, Any],
@@ -242,14 +258,17 @@ def generate_from_event(
     except Exception:
         _log.warning(
             "inference failed for source_type=%s event_ctx=%s",
-            source_type, event_ctx, exc_info=True,
+            source_type,
+            event_ctx,
+            exc_info=True,
         )
         return None
 
     # V3 P2-1: admission gate scoring
     if apply_admission_gate:
         try:
-            from flow_memory.admission import score_candidate, ADMISSION_THRESHOLD
+            from flow_memory.admission import score_candidate
+
             score_result = score_candidate(
                 content=content,
                 source_type=source_type,
@@ -284,7 +303,9 @@ def generate_from_event(
     except Exception:
         _log.warning(
             "failed to create candidate for source_type=%s source_ref=%s",
-            source_type, source_ref, exc_info=True,
+            source_type,
+            source_ref,
+            exc_info=True,
         )
         return None
 

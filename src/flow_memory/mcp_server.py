@@ -10,6 +10,7 @@ Run with:
 Environment variables:
     FLOW_MEMORY_DB  -- override path to SQLite memory DB
 """
+
 from __future__ import annotations
 
 import json
@@ -67,7 +68,9 @@ if mcp is not None:
         _init_db()
         from flow_memory.search import search_memories
 
-        results = search_memories(query, scope=scope, kind=kind, status="confirmed", limit=limit)
+        results = search_memories(
+            query, scope=scope, kind=kind, status="confirmed", limit=limit
+        )
         return [_to_json_safe(r) for r in results]
 
     @mcp.tool()
@@ -169,7 +172,9 @@ if mcp is not None:
         if value_type == "json":
             parsed_value = json.loads(value)
         elif value_type == "list":
-            parsed_value = json.loads(value) if value.startswith("[") else value.split(",")
+            parsed_value = (
+                json.loads(value) if value.startswith("[") else value.split(",")
+            )
 
         set_profile(
             key=key,
@@ -210,9 +215,9 @@ if mcp is not None:
         """Record free-form feedback about a memory for later audit/reflection."""
         _init_db()
         record = {
-            "ts": __import__("datetime").datetime.now(
-                __import__("datetime").timezone.utc
-            ).isoformat(),
+            "ts": __import__("datetime")
+            .datetime.now(__import__("datetime").timezone.utc)
+            .isoformat(),
             "action": "memory_feedback",
             "memory_id": memory_id,
             "feedback": feedback,
@@ -233,6 +238,7 @@ if mcp is not None:
         """Unlock sensitive data access (60 minutes). Password stored as sensitive data."""
         _init_db()
         from flow_memory.sensitive import unlock
+
         return unlock(password)
 
     @mcp.tool()
@@ -240,6 +246,7 @@ if mcp is not None:
         """Check sensitive data lock status."""
         _init_db()
         from flow_memory.sensitive import status
+
         return status()
 
     @mcp.tool()
@@ -247,6 +254,7 @@ if mcp is not None:
         """Immediately lock sensitive data."""
         _init_db()
         from flow_memory.sensitive import lock
+
         lock()
         return {"status": "locked"}
 
@@ -255,6 +263,7 @@ if mcp is not None:
         """Get a sensitive memory item (requires unlock)."""
         _init_db()
         from flow_memory.sensitive import get_sensitive
+
         return _to_json_safe(get_sensitive(memory_id))
 
     @mcp.tool()
@@ -267,8 +276,12 @@ if mcp is not None:
         """Add a new sensitive memory item (encrypted, requires unlock)."""
         _init_db()
         from flow_memory.sensitive import add_sensitive
+
         memory_id = add_sensitive(
-            scope=scope, kind=kind, content=content, created_by=created_by,
+            scope=scope,
+            kind=kind,
+            content=content,
+            created_by=created_by,
         )
         return {"memory_id": memory_id, "status": "encrypted"}
 
@@ -281,13 +294,18 @@ if mcp is not None:
         """List sensitive memory items without decrypting content (requires unlock)."""
         _init_db()
         from flow_memory.sensitive import list_sensitive
-        return [_to_json_safe(r) for r in list_sensitive(scope=scope, kind=kind, limit=limit)]
+
+        return [
+            _to_json_safe(r)
+            for r in list_sensitive(scope=scope, kind=kind, limit=limit)
+        ]
 
     @mcp.tool()
     def memory_sensitive_search(query: str, limit: int = 20) -> list[dict]:
         """Search sensitive memories by content (requires unlock)."""
         _init_db()
         from flow_memory.sensitive import search_sensitive
+
         return [_to_json_safe(r) for r in search_sensitive(query, limit=limit)]
 
     @mcp.tool()
@@ -295,6 +313,7 @@ if mcp is not None:
         """Delete a sensitive memory item (requires unlock)."""
         _init_db()
         from flow_memory.sensitive import delete_sensitive
+
         ok = delete_sensitive(memory_id)
         return {"memory_id": memory_id, "deleted": ok}
 
@@ -311,6 +330,7 @@ if mcp is not None:
         """Set up sensitive storage with password and 3 security questions."""
         _init_db()
         from flow_memory.sensitive import setup_password
+
         questions = [
             {"question": question1, "answer": answer1},
             {"question": question2, "answer": answer2},
@@ -329,6 +349,7 @@ if mcp is not None:
         """Reset password using security questions (2 of 3 required)."""
         _init_db()
         from flow_memory.sensitive import recover
+
         answers = {"q0": answer1, "q1": answer2, "q2": answer3}
         recover(answers, new_password)
         return {"status": "recovered"}

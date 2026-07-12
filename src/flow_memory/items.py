@@ -8,6 +8,7 @@ Long-term knowledge assets stored in SQLite. Each item has:
 
 Supports supersession (complete replacement) and revision_of (minor update with audit trail).
 """
+
 from __future__ import annotations
 
 import json
@@ -15,11 +16,22 @@ from datetime import datetime, timezone
 
 from flow_memory.storage import get_backend
 
-_VALID_LAYERS = frozenset({"core", "task", "episode", "decision", "reflection", "archive"})
-_VALID_KINDS = frozenset({
-    "role_rule", "workflow_rule", "decision", "mistake", "preference",
-    "handoff", "domain_fact", "runtime_rule", "note",
-})
+_VALID_LAYERS = frozenset(
+    {"core", "task", "episode", "decision", "reflection", "archive"}
+)
+_VALID_KINDS = frozenset(
+    {
+        "role_rule",
+        "workflow_rule",
+        "decision",
+        "mistake",
+        "preference",
+        "handoff",
+        "domain_fact",
+        "runtime_rule",
+        "note",
+    }
+)
 _VALID_ITEM_STATUSES = frozenset({"candidate", "confirmed", "deprecated", "rejected"})
 
 
@@ -63,7 +75,9 @@ def add_memory(
     if layer not in _VALID_LAYERS:
         raise ValueError(f"invalid layer: {layer} (valid: {sorted(_VALID_LAYERS)})")
     if status not in _VALID_ITEM_STATUSES:
-        raise ValueError(f"invalid status: {status} (valid: {sorted(_VALID_ITEM_STATUSES)})")
+        raise ValueError(
+            f"invalid status: {status} (valid: {sorted(_VALID_ITEM_STATUSES)})"
+        )
     if not content.strip():
         raise ValueError("content cannot be empty")
     if not 1 <= importance <= 10:
@@ -83,11 +97,24 @@ def add_memory(
             metadata_json)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
-            mid, layer, scope, kind, status, content.strip(), summary,
-            source_ref, json.dumps(evidence_refs or []),
-            confidence, importance,
-            now, valid_until, created_by, now, now,
-            supersedes, revision_of,
+            mid,
+            layer,
+            scope,
+            kind,
+            status,
+            content.strip(),
+            summary,
+            source_ref,
+            json.dumps(evidence_refs or []),
+            confidence,
+            importance,
+            now,
+            valid_until,
+            created_by,
+            now,
+            now,
+            supersedes,
+            revision_of,
             json.dumps(metadata or {}),
         ),
     )
@@ -95,6 +122,7 @@ def add_memory(
     # Sync FTS index
     try:
         from flow_memory.search import sync_fts
+
         sync_fts(mid, content.strip(), summary)
     except Exception:
         pass  # best-effort: FTS sync failure should not block inserts
@@ -102,6 +130,7 @@ def add_memory(
     if status == "confirmed":
         try:
             from flow_memory.vector_store import index_memory
+
             index_memory(
                 mid,
                 content.strip(),
@@ -119,6 +148,7 @@ def add_memory(
     # Phase 3: record write event
     try:
         from flow_memory.memory.usage_stats import record_write
+
         record_write(kind=kind, scope=scope, memory_id=mid)
     except Exception:
         pass
@@ -140,7 +170,9 @@ def get_memory(memory_id: str) -> dict | None:
     return d
 
 
-def list_pinned_memories(scope: str | list[str] | None = None, limit: int = 50) -> list[dict]:
+def list_pinned_memories(
+    scope: str | list[str] | None = None, limit: int = 50
+) -> list[dict]:
     """List pinned memory items. Pinned items are protected from budget eviction."""
     get_backend().init_schema()
     conn = get_backend().connect()
@@ -181,6 +213,7 @@ def pin_memory(memory_id: str) -> bool:
     if changed:
         try:
             from flow_memory.memory.usage_stats import record_write
+
             record_write(kind="pin", scope=memory_id, memory_id=memory_id)
         except Exception:
             pass
@@ -253,12 +286,14 @@ def deprecate_memory(memory_id: str, *, reason: str = "") -> bool:
     # Sync vector index (best-effort removal)
     try:
         from flow_memory.vector_store import remove_from_index
+
         remove_from_index(memory_id)
     except Exception:
         pass
     # Phase 3: record
     try:
         from flow_memory.memory.usage_stats import record_write
+
         record_write(kind="deprecate", scope=memory_id, memory_id=memory_id)
     except Exception:
         pass
@@ -292,6 +327,7 @@ def supersede_memory(old_id: str, new_id: str) -> bool:
     # Sync vector index: remove old vector (best-effort)
     try:
         from flow_memory.vector_store import remove_from_index
+
         remove_from_index(old_id)
     except Exception:
         pass
@@ -301,9 +337,17 @@ def supersede_memory(old_id: str, new_id: str) -> bool:
 def update_memory(memory_id: str, **fields) -> bool:
     """Update allowed fields on a memory item. Returns True if found."""
     allowed = {
-        "content", "summary", "source_ref", "evidence_refs",
-        "confidence", "importance", "valid_until", "layer",
-        "kind", "status", "metadata_json",
+        "content",
+        "summary",
+        "source_ref",
+        "evidence_refs",
+        "confidence",
+        "importance",
+        "valid_until",
+        "layer",
+        "kind",
+        "status",
+        "metadata_json",
     }
     invalid = set(fields) - allowed
     if invalid:
@@ -334,6 +378,7 @@ def update_memory(memory_id: str, **fields) -> bool:
     # Sync FTS index with updated content
     try:
         from flow_memory.search import sync_fts
+
         updated = get_memory(memory_id)
         if updated:
             sync_fts(memory_id, updated.get("content", ""), updated.get("summary", ""))
@@ -342,6 +387,7 @@ def update_memory(memory_id: str, **fields) -> bool:
     # Sync vector index (best-effort)
     try:
         from flow_memory.vector_store import index_memory
+
         updated = get_memory(memory_id)
         if updated and updated.get("status") == "confirmed":
             index_memory(

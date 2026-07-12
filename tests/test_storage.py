@@ -1,7 +1,7 @@
 """Tests for storage backends."""
+
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -9,10 +9,8 @@ import pytest
 from flow_memory.storage import (
     DefaultPathProvider,
     MarkdownBackend,
-    PathProvider,
     PostgresBackend,
     SqliteBackend,
-    StorageBackend,
     get_backend,
     use_backend,
 )
@@ -23,9 +21,12 @@ def test_sqlite_backend_init_schema(tmp_db_path):
     backend.init_schema()
     conn = backend.connect()
     # Should have all the tables
-    tables = [r[0] for r in conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table'"
-    ).fetchall()]
+    tables = [
+        r[0]
+        for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        ).fetchall()
+    ]
     assert "memory_items" in tables
     assert "memory_candidates" in tables
     assert "memory_user_profile" in tables

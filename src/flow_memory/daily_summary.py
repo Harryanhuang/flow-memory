@@ -4,6 +4,7 @@ Stores per-day agent session summaries with key decisions and open questions.
 These are short-term memories that can be reflected into long-term memory
 (memory_items) via the candidate pipeline.
 """
+
 from __future__ import annotations
 
 import json
@@ -134,6 +135,7 @@ def archive_old_summaries(retention_days: int = 30) -> int:
     cutoff = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     # Calculate cutoff date as YYYY-MM-DD
     from datetime import timedelta
+
     cutoff_dt = datetime.now(timezone.utc) - timedelta(days=retention_days)
     cutoff = cutoff_dt.strftime("%Y-%m-%d")
 

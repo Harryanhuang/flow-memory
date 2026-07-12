@@ -10,6 +10,7 @@ Dimensions:
   - kind_weight: workflow_rule/role_rule > mistake/preference > note
   - conflict_penalty: penalize semantically similar to existing confirmed
 """
+
 from __future__ import annotations
 
 DIMENSION_WEIGHTS = {
@@ -24,8 +25,14 @@ ADMISSION_THRESHOLD = 0.5
 # Content markers that strongly indicate a test fixture or placeholder
 # candidate rather than a reusable operational memory.
 _PLACEHOLDER_MARKERS = (
-    "test rule", "new rule", "high imp rule", "domain fact",
-    "pin me", "item 0", "placeholder", "lorem ipsum",
+    "test rule",
+    "new rule",
+    "high imp rule",
+    "domain fact",
+    "pin me",
+    "item 0",
+    "placeholder",
+    "lorem ipsum",
 )
 
 
@@ -73,7 +80,11 @@ def score_candidate(
     # 2. reusability (scope-based)
     if proposed_scope.startswith("team") or proposed_scope.startswith("lane"):
         breakdown["reusability"] = 1.0
-    elif proposed_scope.startswith("workflow") or proposed_scope.startswith("subject") or proposed_scope.startswith("project"):
+    elif (
+        proposed_scope.startswith("workflow")
+        or proposed_scope.startswith("subject")
+        or proposed_scope.startswith("project")
+    ):
         breakdown["reusability"] = 0.7
     elif proposed_scope.startswith("task"):
         breakdown["reusability"] = 0.4
@@ -110,10 +121,7 @@ def score_candidate(
         breakdown["conflict_penalty"] = 0.0
 
     # Weighted sum
-    total = sum(
-        breakdown[dim] * weight
-        for dim, weight in DIMENSION_WEIGHTS.items()
-    )
+    total = sum(breakdown[dim] * weight for dim, weight in DIMENSION_WEIGHTS.items())
     # Clamp to [0, 1]
     score = max(0.0, min(1.0, total))
     passed = score >= ADMISSION_THRESHOLD

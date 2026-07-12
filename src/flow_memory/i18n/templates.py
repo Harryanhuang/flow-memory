@@ -3,6 +3,7 @@
 Hosts can register new locales via `register_template()` and switch the
 active locale via `set_locale()`. Default locale is English.
 """
+
 from __future__ import annotations
 
 
@@ -46,7 +47,9 @@ def get_template(key: str, **kwargs) -> str:
 
     Falls back to English if the key doesn't exist in the current locale.
     """
-    template = _templates.get(_current_locale, {}).get(key) or _templates["en"].get(key, key)
+    template = _templates.get(_current_locale, {}).get(key) or _templates["en"].get(
+        key, key
+    )
     try:
         return template.format(**kwargs)
     except (KeyError, IndexError):

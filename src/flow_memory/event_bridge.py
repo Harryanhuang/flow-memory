@@ -20,6 +20,7 @@ Idempotency is inherited from :func:`add_candidate`: firing the same
 bridge twice with the same source_ref returns the same candidate_id
 without creating a duplicate row.
 """
+
 from __future__ import annotations
 
 import logging
@@ -29,6 +30,7 @@ _log = logging.getLogger(__name__)
 
 
 # ── Helper ────────────────────────────────────────────────────────
+
 
 def _call_hook(hook_fn, event_ctx: dict, *, label: str) -> str | None:
     """Invoke a hook, swallow errors, return candidate_id or None.
@@ -42,7 +44,9 @@ def _call_hook(hook_fn, event_ctx: dict, *, label: str) -> str | None:
     except Exception:
         _log.warning(
             "event_bridge %s: hook failed for ctx=%s",
-            label, event_ctx, exc_info=True,
+            label,
+            event_ctx,
+            exc_info=True,
         )
         return None
 
@@ -94,6 +98,7 @@ def bridge_review_event(review_result: dict[str, Any]) -> str | None:
 
 # ── Bridge: closeout check ───────────────────────────────────────
 
+
 def bridge_closeout_check(
     task_id: str,
     items_count: int,
@@ -139,24 +144,29 @@ def bridge_closeout_check(
                 "workflow_id": workflow_id,
             }
             result["candidate_id"] = _call_hook(
-                on_closeout_anomaly, event_ctx, label="closeout_check",
+                on_closeout_anomaly,
+                event_ctx,
+                label="closeout_check",
             )
 
     # 2. Gate check (always — even consistent closeouts can be blocked)
     if agent:
         try:
             from flow_memory.inject import build_gate_check
+
             gate = build_gate_check(agent, task_id, gate_name="closeout")
             result["blocking_constraints"] = gate.get("blocking_constraints", [])
         except Exception:
             _log.warning(
-                "event_bridge closeout gate_check failed", exc_info=True,
+                "event_bridge closeout gate_check failed",
+                exc_info=True,
             )
 
     return result
 
 
 # ── Bridge: manager correction ───────────────────────────────────
+
 
 def bridge_manager_correction(
     agent: str,
@@ -185,11 +195,14 @@ def bridge_manager_correction(
         "context": context,
     }
     return _call_hook(
-        on_manager_correction, event_ctx, label="manager_correction",
+        on_manager_correction,
+        event_ctx,
+        label="manager_correction",
     )
 
 
 # ── Bridge: task lifecycle ───────────────────────────────────────
+
 
 def _count_prior_failures(workflow_id: str) -> int:
     """Count prior failure-related candidates for this workflow.
@@ -209,6 +222,7 @@ def _count_prior_failures(workflow_id: str) -> int:
     """
     try:
         from flow_memory.candidate_gen import list_candidates
+
         existing = list_candidates(
             scope=f"workflow:{workflow_id}",
             status="proposed",
@@ -274,6 +288,7 @@ def bridge_task_lifecycle(
     reason_text = reasons[0] if reasons else "no reason given"
     try:
         from flow_memory.candidate_gen import add_candidate
+
         add_candidate(
             scope=f"workflow:{workflow_id}",
             kind="mistake",
@@ -288,7 +303,8 @@ def bridge_task_lifecycle(
     except Exception:
         _log.warning(
             "event_bridge task_lifecycle: failed to record witness for %s",
-            task_id, exc_info=True,
+            task_id,
+            exc_info=True,
         )
         return None
 
@@ -317,5 +333,7 @@ def bridge_task_lifecycle(
         "task_ids": ctx.get("task_ids") or [task_id],
     }
     return _call_hook(
-        on_task_failure_pattern, event_ctx, label="task_lifecycle",
+        on_task_failure_pattern,
+        event_ctx,
+        label="task_lifecycle",
     )

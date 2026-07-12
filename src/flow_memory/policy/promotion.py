@@ -3,6 +3,7 @@
 By default, high-impact kinds require an authorized reviewer. Hosts can
 customize who is allowed to promote what via `PromotionPolicy`.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

@@ -4,6 +4,7 @@ Hosts can override the default taxonomy (layers, kinds, statuses) by
 subclassing `MemoryTaxonomy` and passing the new instance to
 `set_taxonomy()`.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -13,20 +14,55 @@ from dataclasses import dataclass, field
 class MemoryTaxonomy:
     """Valid layers / kinds / statuses for memory items."""
 
-    layers: frozenset = field(default_factory=lambda: frozenset({
-        "core", "task", "episode", "decision", "reflection", "archive",
-    }))
-    kinds: frozenset = field(default_factory=lambda: frozenset({
-        "role_rule", "workflow_rule", "decision", "mistake",
-        "preference", "handoff", "domain_fact", "runtime_rule", "note",
-    }))
-    item_statuses: frozenset = field(default_factory=lambda: frozenset({
-        "candidate", "confirmed", "deprecated", "rejected",
-    }))
-    high_impact_kinds: frozenset = field(default_factory=lambda: frozenset({
-        "workflow_rule", "role_rule", "runtime_rule",
-        "decision", "preference", "handoff",
-    }))
+    layers: frozenset = field(
+        default_factory=lambda: frozenset(
+            {
+                "core",
+                "task",
+                "episode",
+                "decision",
+                "reflection",
+                "archive",
+            }
+        )
+    )
+    kinds: frozenset = field(
+        default_factory=lambda: frozenset(
+            {
+                "role_rule",
+                "workflow_rule",
+                "decision",
+                "mistake",
+                "preference",
+                "handoff",
+                "domain_fact",
+                "runtime_rule",
+                "note",
+            }
+        )
+    )
+    item_statuses: frozenset = field(
+        default_factory=lambda: frozenset(
+            {
+                "candidate",
+                "confirmed",
+                "deprecated",
+                "rejected",
+            }
+        )
+    )
+    high_impact_kinds: frozenset = field(
+        default_factory=lambda: frozenset(
+            {
+                "workflow_rule",
+                "role_rule",
+                "runtime_rule",
+                "decision",
+                "preference",
+                "handoff",
+            }
+        )
+    )
     high_impact_expiry_days: int = 30
     default_expiry_days: int = 90
 

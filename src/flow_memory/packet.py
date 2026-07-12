@@ -8,6 +8,7 @@ Budget: constraints max 8 items (L0→L1→L2 priority), capsule max 800 chars,
 memories max 5 items / 1000 chars, total ~4000 Chinese chars.
 When over budget, drop from bottom — constraints are NEVER truncated.
 """
+
 from __future__ import annotations
 
 import json as _json
@@ -107,10 +108,16 @@ def _render_memories(agent: str, task_id: str | None) -> tuple[list[str], set[st
     pinned_items = list_pinned_memories(scope=resolved_scope, limit=20)
 
     # Non-pinned memories for the "relevant" segment
-    memories = list_memories(scope=resolved_scope, status="confirmed", limit=MAX_MEMORIES)
+    memories = list_memories(
+        scope=resolved_scope, status="confirmed", limit=MAX_MEMORIES
+    )
 
     # V3 P0-1: compute effective_confidence, sort by it descending
-    now = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
+    now = (
+        __import__("datetime")
+        .datetime.now(__import__("datetime").timezone.utc)
+        .isoformat()
+    )
     for m in memories:
         m["effective_confidence"] = effective_confidence(
             base_confidence=m.get("confidence", 1.0),
@@ -118,7 +125,10 @@ def _render_memories(agent: str, task_id: str | None) -> tuple[list[str], set[st
             updated_at=m.get("updated_at", now),
             now=now,
         )
-    memories.sort(key=lambda m: (m.get("effective_confidence", 0), m.get("importance", 5)), reverse=True)
+    memories.sort(
+        key=lambda m: (m.get("effective_confidence", 0), m.get("importance", 5)),
+        reverse=True,
+    )
 
     lines: list[str] = []
     ids: set[str] = set()
@@ -145,7 +155,9 @@ def _render_memories(agent: str, task_id: str | None) -> tuple[list[str], set[st
             summary = m.get("summary", "") or m.get("content", "")[:100]
             importance = m.get("importance", 5)
             eff = m.get("effective_confidence", 1.0)
-            lines.append(f"- [{kind}] {summary} (eff_conf={eff:.2f}, importance={importance})")
+            lines.append(
+                f"- [{kind}] {summary} (eff_conf={eff:.2f}, importance={importance})"
+            )
             ids.add(mid)
 
     return lines, ids
@@ -183,8 +195,7 @@ def _semantic_recall(
 
     # Exclude already-recalled memories and sort by importance descending
     new_results = [
-        r for r in results
-        if r.get("memory_id", "") not in existing_memory_ids
+        r for r in results if r.get("memory_id", "") not in existing_memory_ids
     ]
     new_results.sort(key=lambda r: r.get("importance", 5), reverse=True)
 
@@ -231,6 +242,7 @@ def _dual_query_recall(
     if task_id:
         try:
             from flow_memory.capsules import get_capsule
+
             cap = get_capsule(task_id)
             if cap:
                 workflow_id = cap.get("workflow_id") or None
@@ -254,7 +266,7 @@ def _dual_query_recall(
     for r in new_results[:2]:
         kind = r.get("kind", "")
         source = r.get("_source", "topic")
-        summary = (r.get("summary", "") or r.get("content", "")[:100])
+        summary = r.get("summary", "") or r.get("content", "")[:100]
         importance = r.get("importance", 5)
         line = f"- [dual:{source}][{kind}] {summary} (importance={importance})"
         line_len = _char_len(line)
@@ -271,6 +283,7 @@ def _build_semantic_query(agent: str, task_id: str | None) -> str:
     if task_id:
         try:
             from flow_memory.capsules import get_capsule
+
             cap = get_capsule(task_id)
             if cap:
                 parts: list[str] = []
@@ -287,6 +300,7 @@ def _build_semantic_query(agent: str, task_id: str | None) -> str:
     query_parts: list[str] = [f"agent:{agent}"]
     try:
         from flow_memory.constraints import query_for_agent
+
         constraints = query_for_agent(agent, task_id=task_id)[:3]
         for c in constraints:
             content = c.get("content", "")
@@ -328,7 +342,9 @@ def assemble_memory_packet(
         return ""
 
     constraints = query_for_agent(
-        agent, task_id=task_id, injection_point=injection_point,
+        agent,
+        task_id=task_id,
+        injection_point=injection_point,
     )[:MAX_CONSTRAINTS]
     capsule = None
     if task_id:
@@ -398,7 +414,9 @@ def assemble_memory_packet(
     # Section 3: Relevant Confirmed Memories (scope match first)
     semantic_lines: list[str] = []
     if budget_remaining > 0:
-        semantic_lines = _semantic_recall(agent, task_id, recalled_ids, budget_remaining)
+        semantic_lines = _semantic_recall(
+            agent, task_id, recalled_ids, budget_remaining
+        )
 
     # V3 P1-4: dual query (topic + workflow background)
     dual_lines: list[str] = []
@@ -438,5 +456,5 @@ def assemble_memory_packet(
 
 def extract_task_id_from_message(message: str) -> str | None:
     """Try to extract a task ID (T-<n>) from a message string."""
-    match = re.search(r'\b(T-\d+)\b', message)
+    match = re.search(r"\b(T-\d+)\b", message)
     return match.group(1) if match else None

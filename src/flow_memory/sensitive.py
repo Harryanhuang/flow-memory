@@ -10,6 +10,7 @@ Design:
   - Security questions for password recovery (2 of 3 required)
   - Audit logging with automatic sensitive field redaction
 """
+
 from __future__ import annotations
 
 import base64
@@ -53,6 +54,7 @@ def _next_id(now: str) -> str:
 
 # ── Cryptographic primitives ────────────────────────────────────────
 
+
 def _generate_salt() -> bytes:
     """Generate 32-byte random salt."""
     return os.urandom(32)
@@ -91,6 +93,7 @@ def _encrypt(key: bytes, plaintext: bytes) -> tuple[bytes, bytes, bytes]:
     """Encrypt with AES-256-GCM. Returns (ciphertext, nonce, tag)."""
     try:
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
         nonce = os.urandom(12)
         aesgcm = AESGCM(key)
         ct = aesgcm.encrypt(nonce, plaintext, None)
@@ -100,10 +103,11 @@ def _encrypt(key: bytes, plaintext: bytes) -> tuple[bytes, bytes, bytes]:
         # Fallback: XOR-based obfuscation (NOT secure, but functional)
         # Only used when cryptography is not installed
         import hashlib
+
         nonce = os.urandom(12)
         stream = hashlib.sha256(key + nonce).digest()
         stream = stream * (len(plaintext) // len(stream) + 1)
-        ct = bytes(a ^ b for a, b in zip(plaintext, stream[:len(plaintext)]))
+        ct = bytes(a ^ b for a, b in zip(plaintext, stream[: len(plaintext)]))
         tag = hashlib.sha256(key + nonce + ct).digest()[:16]
         return ct, nonce, tag
 
@@ -112,17 +116,20 @@ def _decrypt(key: bytes, ciphertext: bytes, nonce: bytes, tag: bytes) -> bytes:
     """Decrypt AES-256-GCM."""
     try:
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
         aesgcm = AESGCM(key)
         return aesgcm.decrypt(nonce, ciphertext + tag, None)
     except ImportError:
         # Fallback: XOR-based deobfuscation
         import hashlib
+
         stream = hashlib.sha256(key + nonce).digest()
         stream = stream * (len(ciphertext) // len(stream) + 1)
-        return bytes(a ^ b for a, b in zip(ciphertext, stream[:len(ciphertext)]))
+        return bytes(a ^ b for a, b in zip(ciphertext, stream[: len(ciphertext)]))
 
 
 # ── Password management ─────────────────────────────────────────────
+
 
 def is_configured() -> bool:
     """Check if sensitive storage has been set up (password configured)."""
@@ -154,10 +161,12 @@ def setup_password(password: str, questions: list[dict]) -> None:
     for q in questions[:3]:
         answer_normalized = q["answer"].strip().lower()
         answer_hash = _hash_password(answer_normalized, salt)
-        hashed_questions.append({
-            "question": q["question"],
-            "answer_hash": answer_hash,
-        })
+        hashed_questions.append(
+            {
+                "question": q["question"],
+                "answer_hash": answer_hash,
+            }
+        )
 
     questions_json = json.dumps(hashed_questions, ensure_ascii=False)
     now = _now_iso()
@@ -167,8 +176,13 @@ def setup_password(password: str, questions: list[dict]) -> None:
         """INSERT OR REPLACE INTO sensitive_config
            (id, password_hash, salt, questions_json, created_at, updated_at)
            VALUES ('singleton', ?, ?, ?, ?, ?)""",
-        (password_hash, base64.b64encode(salt).decode("ascii"),
-         questions_json, now, now),
+        (
+            password_hash,
+            base64.b64encode(salt).decode("ascii"),
+            questions_json,
+            now,
+            now,
+        ),
     )
     conn.commit()
 
@@ -179,7 +193,9 @@ def change_password(old_password: str, new_password: str) -> None:
         raise ValueError(f"Password must be at least {MIN_PASSWORD_LEN} characters")
 
     conn = get_backend().connect()
-    row = conn.execute("SELECT password_hash, salt FROM sensitive_config WHERE id='singleton'").fetchone()
+    row = conn.execute(
+        "SELECT password_hash, salt FROM sensitive_config WHERE id='singleton'"
+    ).fetchone()
     if not row:
         raise RuntimeError("Sensitive storage not configured")
 
@@ -194,9 +210,13 @@ def change_password(old_password: str, new_password: str) -> None:
     new_hash = _hash_password(new_password, new_salt)
 
     # Re-encrypt all sensitive items
-    items = conn.execute("SELECT id, encrypted_data, nonce, tag FROM sensitive_memory_items").fetchall()
+    items = conn.execute(
+        "SELECT id, encrypted_data, nonce, tag FROM sensitive_memory_items"
+    ).fetchall()
     for item in items:
-        plaintext = _decrypt(old_key, item["encrypted_data"], item["nonce"], item["tag"])
+        plaintext = _decrypt(
+            old_key, item["encrypted_data"], item["nonce"], item["tag"]
+        )
         ct, nonce, tag = _encrypt(new_key, plaintext)
         conn.execute(
             "UPDATE sensitive_memory_items SET encrypted_data=?, nonce=?, tag=?, updated_at=? WHERE id=?",
@@ -204,7 +224,9 @@ def change_password(old_password: str, new_password: str) -> None:
         )
 
     # Re-encrypt security questions
-    questions_row = conn.execute("SELECT questions_json FROM sensitive_config WHERE id='singleton'").fetchone()
+    questions_row = conn.execute(
+        "SELECT questions_json FROM sensitive_config WHERE id='singleton'"
+    ).fetchone()
     if questions_row:
         questions_json = questions_row["questions_json"]
         # Re-hash answers with new salt
@@ -216,8 +238,12 @@ def change_password(old_password: str, new_password: str) -> None:
             rehashed.append(q)
         conn.execute(
             "UPDATE sensitive_config SET password_hash=?, salt=?, questions_json=?, updated_at=? WHERE id='singleton'",
-            (new_hash, base64.b64encode(new_salt).decode("ascii"),
-             json.dumps(rehashed, ensure_ascii=False), _now_iso()),
+            (
+                new_hash,
+                base64.b64encode(new_salt).decode("ascii"),
+                json.dumps(rehashed, ensure_ascii=False),
+                _now_iso(),
+            ),
         )
 
     conn.commit()
@@ -236,9 +262,13 @@ def unlock(password: str) -> dict:
     global _unlocked_until, _derived_key
 
     conn = get_backend().connect()
-    row = conn.execute("SELECT password_hash, salt FROM sensitive_config WHERE id='singleton'").fetchone()
+    row = conn.execute(
+        "SELECT password_hash, salt FROM sensitive_config WHERE id='singleton'"
+    ).fetchone()
     if not row:
-        raise RuntimeError("Sensitive storage not configured. Run: eduflow memory sensitive setup")
+        raise RuntimeError(
+            "Sensitive storage not configured. Run: eduflow memory sensitive setup"
+        )
 
     salt = base64.b64decode(row["salt"])
     if not _verify_password(password, row["password_hash"], salt):
@@ -286,7 +316,9 @@ def recover(answers: dict[str, str], new_password: str) -> None:
         raise ValueError(f"Password must be at least {MIN_PASSWORD_LEN} characters")
 
     conn = get_backend().connect()
-    row = conn.execute("SELECT salt, questions_json FROM sensitive_config WHERE id='singleton'").fetchone()
+    row = conn.execute(
+        "SELECT salt, questions_json FROM sensitive_config WHERE id='singleton'"
+    ).fetchone()
     if not row:
         raise RuntimeError("Sensitive storage not configured")
 
@@ -323,7 +355,9 @@ def recover(answers: dict[str, str], new_password: str) -> None:
 def get_security_questions() -> list[str]:
     """Return the security questions (without answers)."""
     conn = get_backend().connect()
-    row = conn.execute("SELECT questions_json FROM sensitive_config WHERE id='singleton'").fetchone()
+    row = conn.execute(
+        "SELECT questions_json FROM sensitive_config WHERE id='singleton'"
+    ).fetchone()
     if not row:
         return []
     questions = json.loads(row["questions_json"])
@@ -331,6 +365,7 @@ def get_security_questions() -> list[str]:
 
 
 # ── Sensitive memory CRUD ───────────────────────────────────────────
+
 
 def add_sensitive(
     scope: str,
@@ -351,11 +386,14 @@ def add_sensitive(
     mid = _next_id(now)
 
     # Encrypt content
-    plaintext = json.dumps({
-        "content": content,
-        "created_by": created_by,
-        "created_at": now,
-    }, ensure_ascii=False).encode("utf-8")
+    plaintext = json.dumps(
+        {
+            "content": content,
+            "created_by": created_by,
+            "created_at": now,
+        },
+        ensure_ascii=False,
+    ).encode("utf-8")
     ct, nonce, tag = _encrypt(_derived_key, plaintext)
 
     conn = get_backend().connect()
@@ -459,19 +497,23 @@ def search_sensitive(query: str, limit: int = 20) -> list[dict]:
     query_lower = query.lower()
     for row in rows:
         try:
-            plaintext = _decrypt(_derived_key, row["encrypted_data"], row["nonce"], row["tag"])
+            plaintext = _decrypt(
+                _derived_key, row["encrypted_data"], row["nonce"], row["tag"]
+            )
             data = json.loads(plaintext.decode("utf-8"))
             content = data.get("content", "")
             if query_lower in content.lower():
-                results.append({
-                    "id": row["id"],
-                    "scope": row["scope"],
-                    "kind": row["kind"],
-                    "content": content,
-                    "status": row["status"],
-                    "created_at": row["created_at"],
-                    "sensitive": True,
-                })
+                results.append(
+                    {
+                        "id": row["id"],
+                        "scope": row["scope"],
+                        "kind": row["kind"],
+                        "content": content,
+                        "status": row["status"],
+                        "created_at": row["created_at"],
+                        "sensitive": True,
+                    }
+                )
                 if len(results) >= limit:
                     break
         except Exception:
@@ -488,9 +530,7 @@ def delete_sensitive(memory_id: str) -> bool:
 
     get_backend().init_schema()
     conn = get_backend().connect()
-    cur = conn.execute(
-        "DELETE FROM sensitive_memory_items WHERE id = ?", (memory_id,)
-    )
+    cur = conn.execute("DELETE FROM sensitive_memory_items WHERE id = ?", (memory_id,))
     conn.commit()
 
     if cur.rowcount > 0:
@@ -513,16 +553,20 @@ def export_sensitive_json() -> list[dict]:
     items = []
     for row in rows:
         try:
-            plaintext = _decrypt(_derived_key, row["encrypted_data"], row["nonce"], row["tag"])
+            plaintext = _decrypt(
+                _derived_key, row["encrypted_data"], row["nonce"], row["tag"]
+            )
             data = json.loads(plaintext.decode("utf-8"))
-            items.append({
-                "id": row["id"],
-                "scope": row["scope"],
-                "kind": row["kind"],
-                "content": data["content"],
-                "created_by": data.get("created_by", ""),
-                "created_at": row["created_at"],
-            })
+            items.append(
+                {
+                    "id": row["id"],
+                    "scope": row["scope"],
+                    "kind": row["kind"],
+                    "content": data["content"],
+                    "created_by": data.get("created_by", ""),
+                    "created_at": row["created_at"],
+                }
+            )
         except Exception:
             continue
 

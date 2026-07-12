@@ -1,4 +1,5 @@
 """Standalone command-line interface for Flow Memory."""
+
 from __future__ import annotations
 
 import argparse
@@ -84,30 +85,54 @@ def _parser() -> argparse.ArgumentParser:
 def _run(args: argparse.Namespace) -> int:
     if args.command == "init":
         from flow_memory.storage import get_backend
+
         backend = get_backend()
         backend.init_schema()
         print(f"Initialized {backend.dialect()} storage")
     elif args.command == "items":
         from flow_memory.items import add_memory, get_memory, list_memories
+
         if args.action == "add":
-            print(add_memory(args.scope, args.kind, args.content, layer=args.layer,
-                             importance=args.importance, status=args.status))
+            print(
+                add_memory(
+                    args.scope,
+                    args.kind,
+                    args.content,
+                    layer=args.layer,
+                    importance=args.importance,
+                    status=args.status,
+                )
+            )
         elif args.action == "get":
             _print(get_memory(args.memory_id))
         else:
-            _print(list_memories(scope=args.scope, kind=args.kind, status=args.status,
-                                 limit=args.limit))
+            _print(
+                list_memories(
+                    scope=args.scope,
+                    kind=args.kind,
+                    status=args.status,
+                    limit=args.limit,
+                )
+            )
     elif args.command == "search":
         from flow_memory.search import hybrid_search, search_memories
+
         if args.hybrid:
-            result = hybrid_search(args.query, scope=args.scope, kind=args.kind,
-                                   limit=args.limit)
+            result = hybrid_search(
+                args.query, scope=args.scope, kind=args.kind, limit=args.limit
+            )
         else:
-            result = search_memories(args.query, scope=args.scope, kind=args.kind,
-                                     status="confirmed", limit=args.limit)
+            result = search_memories(
+                args.query,
+                scope=args.scope,
+                kind=args.kind,
+                status="confirmed",
+                limit=args.limit,
+            )
         _print(result)
     elif args.command == "profile":
         from flow_memory.user_profile import get_profile, list_profile, set_profile
+
         if args.action == "set":
             set_profile(args.key, args.value)
             print(args.key)
@@ -117,26 +142,40 @@ def _run(args: argparse.Namespace) -> int:
             _print(list_profile(prefix=args.prefix, limit=args.limit))
     elif args.command == "candidate":
         from flow_memory.candidates import add_candidate
-        print(add_candidate(scope=args.scope, kind=args.kind, content=args.content,
-                            source_type="manual", reason=args.reason))
+
+        print(
+            add_candidate(
+                scope=args.scope,
+                kind=args.kind,
+                content=args.content,
+                source_type="manual",
+                reason=args.reason,
+            )
+        )
     elif args.command == "candidates":
         from flow_memory.candidates import list_candidates
+
         _print(list_candidates(scope=args.scope, status=args.status, limit=args.limit))
     elif args.command == "promote":
         from flow_memory.candidates import promote_candidate
+
         print(promote_candidate(args.candidate_id, reviewer=args.reviewer))
     elif args.command == "reject":
         from flow_memory.candidates import reject_candidate
+
         _print({"rejected": reject_candidate(args.candidate_id, reason=args.reason)})
     elif args.command in {"pin", "unpin"}:
         from flow_memory.items import pin_memory, unpin_memory
+
         operation = pin_memory if args.command == "pin" else unpin_memory
         _print({args.command: operation(args.memory_id)})
     elif args.command == "dashboard":
         from flow_memory.dashboard import render_dashboard
+
         print(render_dashboard(days=args.days))
     elif args.command == "stats":
         from flow_memory.memory.usage_stats import get_usage_stats, render_stats_report
+
         print(render_stats_report(get_usage_stats(days=args.days)))
     return 0
 

@@ -5,6 +5,7 @@ Provides read-only aggregation queries for monitoring DB health:
   - scope_coverage_report: confirmed memories grouped by scope
   - retention_report: lifecycle stats within a time window
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone

@@ -3,6 +3,7 @@
 A Task Capsule is a compact snapshot of a flow task's essential context,
 stored in SQLite so it can be injected into Memory Packets after context loss.
 """
+
 from __future__ import annotations
 
 import json
@@ -52,11 +53,18 @@ def upsert_capsule(
              last_evidence_ref = excluded.last_evidence_ref,
              updated_at = excluded.updated_at""",
         (
-            task_id, workflow_id, owner, gate, goal, acceptance,
+            task_id,
+            workflow_id,
+            owner,
+            gate,
+            goal,
+            acceptance,
             current_status,
             json.dumps(decisions or []),
             json.dumps(blockers or []),
-            next_action, last_evidence_ref, now,
+            next_action,
+            last_evidence_ref,
+            now,
         ),
     )
     conn.commit()

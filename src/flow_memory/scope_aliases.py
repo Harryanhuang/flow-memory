@@ -4,6 +4,7 @@ Aliases allow agents to have persistent scope bindings that can be
 resolved by other modules (e.g. packet.py, search.py) without
 hardcoding agent→scope mappings.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone

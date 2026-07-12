@@ -7,6 +7,7 @@ Periodically run to transition expired rows to their terminal states:
 
 All functions are idempotent: second call returns 0.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone

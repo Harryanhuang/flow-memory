@@ -3,9 +3,9 @@
 Wraps LanceDB (default) with an ABC so alternative vector stores
 can be plugged in.
 """
+
 from __future__ import annotations
 
-import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -59,6 +59,7 @@ class LanceDBBackend(VectorBackend):
     def __init__(self, index_dir: Path | None = None) -> None:
         if index_dir is None:
             from flow_memory.storage.paths import get_path_provider
+
             index_dir = get_path_provider().vector_index_dir()
         self._index_dir = Path(index_dir)
         self._index_dir.mkdir(parents=True, exist_ok=True)
@@ -103,6 +104,7 @@ class LanceDBBackend(VectorBackend):
         """Encode content to a vector using the configured embedding provider."""
         try:
             from flow_memory.embeddings import get_embedding_provider
+
             provider = get_embedding_provider()
             vector = provider.encode(content)
             if not any(v != 0.0 for v in vector):
@@ -178,17 +180,19 @@ class LanceDBBackend(VectorBackend):
                 vector = self._encode(content)
                 if vector is None:
                     continue
-                rows.append({
-                    "memory_id": m.get("id", ""),
-                    "vector": vector,
-                    "content": content.strip()[:2000],
-                    "scope": m.get("scope", ""),
-                    "kind": m.get("kind", ""),
-                    "layer": m.get("layer", ""),
-                    "importance": int(m.get("importance", 5)),
-                    "status": m.get("status", "confirmed"),
-                    "updated_at": m.get("updated_at", ""),
-                })
+                rows.append(
+                    {
+                        "memory_id": m.get("id", ""),
+                        "vector": vector,
+                        "content": content.strip()[:2000],
+                        "scope": m.get("scope", ""),
+                        "kind": m.get("kind", ""),
+                        "layer": m.get("layer", ""),
+                        "importance": int(m.get("importance", 5)),
+                        "status": m.get("status", "confirmed"),
+                        "updated_at": m.get("updated_at", ""),
+                    }
+                )
             if rows:
                 db.create_table(self._table_name, rows)
             return len(rows)
@@ -230,16 +234,18 @@ class LanceDBBackend(VectorBackend):
                 row_imp = int(row.get("importance", 0))
                 if row_imp < min_importance:
                     continue
-                out.append({
-                    "memory_id": row.get("memory_id", ""),
-                    "content": row.get("content", ""),
-                    "score": float(row.get("_distance", 0.0)),
-                    "scope": row.get("scope", ""),
-                    "kind": row.get("kind", ""),
-                    "layer": row.get("layer", ""),
-                    "importance": row_imp,
-                    "status": row.get("status", ""),
-                })
+                out.append(
+                    {
+                        "memory_id": row.get("memory_id", ""),
+                        "content": row.get("content", ""),
+                        "score": float(row.get("_distance", 0.0)),
+                        "scope": row.get("scope", ""),
+                        "kind": row.get("kind", ""),
+                        "layer": row.get("layer", ""),
+                        "importance": row_imp,
+                        "status": row.get("status", ""),
+                    }
+                )
                 if len(out) >= top_k:
                     break
             return out
@@ -256,7 +262,6 @@ class LanceDBBackend(VectorBackend):
                 table = self._get_table()
                 if table is not None:
                     row_count = table.count_rows()
-                    import lancedb
                     if self._lancedb_db is not None:
                         dimension = self._lancedb_db.list_tables()
             except Exception:

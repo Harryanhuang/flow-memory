@@ -18,6 +18,7 @@ Idempotency comes for free: :func:`add_candidate` de-dupes on
 ``(source_type, source_ref)``, so firing the same hook twice with
 the same source_ref produces one candidate, not two.
 """
+
 from __future__ import annotations
 
 import logging
@@ -29,6 +30,7 @@ _log = logging.getLogger(__name__)
 
 
 # ── Helpers ───────────────────────────────────────────────────────
+
 
 def _truthy(v: Any) -> bool:
     """Return True for non-empty strings and non-zero numbers."""
@@ -49,6 +51,7 @@ def _compose_evidence(*parts: str) -> list[str]:
 
 
 # ── Hook: review rejected ────────────────────────────────────────
+
 
 def on_review_rejected(event_ctx: dict[str, Any]) -> str | None:
     """Create a candidate when a review verdict is fail/rejected.
@@ -112,6 +115,7 @@ def on_review_rejected(event_ctx: dict[str, Any]) -> str | None:
 
 # ── Hook: closeout anomaly ───────────────────────────────────────
 
+
 def on_closeout_anomaly(event_ctx: dict[str, Any]) -> str | None:
     """Create a candidate when closeout validation finds a structural anomaly.
 
@@ -163,6 +167,7 @@ def on_closeout_anomaly(event_ctx: dict[str, Any]) -> str | None:
 
 # ── Hook: manager correction ─────────────────────────────────────
 
+
 def on_manager_correction(event_ctx: dict[str, Any]) -> str | None:
     """Create a candidate when a manager explicitly corrects an agent.
 
@@ -208,11 +213,14 @@ def on_manager_correction(event_ctx: dict[str, Any]) -> str | None:
             risk_flags=risk_flags,
         )
     except Exception:
-        _log.warning("on_manager_correction failed for ctx=%s", event_ctx, exc_info=True)
+        _log.warning(
+            "on_manager_correction failed for ctx=%s", event_ctx, exc_info=True
+        )
         return None
 
 
 # ── Hook: task failure pattern ───────────────────────────────────
+
 
 def on_task_failure_pattern(event_ctx: dict[str, Any]) -> str | None:
     """Create a candidate when a workflow shows repeated failures.
@@ -267,5 +275,7 @@ def on_task_failure_pattern(event_ctx: dict[str, Any]) -> str | None:
             risk_flags=["recurring_failure"],
         )
     except Exception:
-        _log.warning("on_task_failure_pattern failed for ctx=%s", event_ctx, exc_info=True)
+        _log.warning(
+            "on_task_failure_pattern failed for ctx=%s", event_ctx, exc_info=True
+        )
         return None

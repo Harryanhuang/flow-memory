@@ -19,6 +19,7 @@ Output structure:
   ## Runtime Rules
   - ...
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -61,14 +62,18 @@ def generate_agents_md(
 
     # Sort within each group by importance desc
     for k in grouped:
-        grouped[k].sort(key=lambda m: (m.get("importance", 0) or 0), reverse=True)
+        grouped[k].sort(key=lambda m: m.get("importance", 0) or 0, reverse=True)
 
     # Build markdown
     lines: list[str] = []
     lines.append(f"# AGENTS.md for `{scope}`")
     lines.append("")
-    lines.append(f"_Auto-generated from confirmed memories (min importance {min_importance})._")
-    lines.append(f"_Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}_")
+    lines.append(
+        f"_Auto-generated from confirmed memories (min importance {min_importance})._"
+    )
+    lines.append(
+        f"_Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}_"
+    )
     lines.append("")
 
     # Section ordering: workflow_rule → role_rule → runtime_rule → decision
@@ -86,7 +91,9 @@ def generate_agents_md(
         lines.append("")
         for m in must_follow[:10]:
             content = m["content"].replace("\n", " ").strip()
-            lines.append(f"- **[{m['kind']}]** {content} (id={m['id']}, imp={m.get('importance')})")
+            lines.append(
+                f"- **[{m['kind']}]** {content} (id={m['id']}, imp={m.get('importance')})"
+            )
         lines.append("")
 
     for kind in ["workflow_rule", "role_rule", "runtime_rule", "decision"]:
@@ -104,8 +111,12 @@ def generate_agents_md(
     lines.append("")
     lines.append(f"_Total memories included: {len(memories)}_")
     lines.append("")
-    lines.append("> **Note**: This is a generated draft. Review and curate before committing.")
-    lines.append("> Pass `--write` to write to file; pass `--dry-run` (default) to preview only.")
+    lines.append(
+        "> **Note**: This is a generated draft. Review and curate before committing."
+    )
+    lines.append(
+        "> Pass `--write` to write to file; pass `--dry-run` (default) to preview only."
+    )
     return "\n".join(lines)
 
 
@@ -123,7 +134,10 @@ def write_agents_md(
     Returns dict with content, written status, path.
     """
     content = generate_agents_md(
-        scope, kinds=kinds, min_importance=min_importance, limit=limit,
+        scope,
+        kinds=kinds,
+        min_importance=min_importance,
+        limit=limit,
     )
 
     out_path = Path(output_path)

@@ -4,15 +4,23 @@ Supports six relation types: supports, contradicts, supersedes,
 derived_from, explains, blocks.  Links form a directed graph that
 enables reasoning about agreement, conflict, and provenance.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
 from flow_memory.storage import get_backend
 
-_VALID_RELATIONS = frozenset({
-    "supports", "contradicts", "supersedes", "derived_from", "explains", "blocks",
-})
+_VALID_RELATIONS = frozenset(
+    {
+        "supports",
+        "contradicts",
+        "supersedes",
+        "derived_from",
+        "explains",
+        "blocks",
+    }
+)
 
 
 def _now_iso() -> str:

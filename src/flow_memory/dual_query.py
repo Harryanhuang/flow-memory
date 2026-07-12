@@ -7,9 +7,8 @@ Combines two retrieval strategies:
 Results are merged and deduplicated. This improves recall coverage by
 combining semantic similarity (topic) with structural context (workflow).
 """
-from __future__ import annotations
 
-from flow_memory.storage import get_backend
+from __future__ import annotations
 
 
 def dual_query_memories(
@@ -37,8 +36,11 @@ def dual_query_memories(
     topic_results = []
     if topic_query and topic_query.strip():
         topic_results = search_memories(
-            topic_query, scope=scope or None, kind=kind or None,
-            status=status or None, limit=limit,
+            topic_query,
+            scope=scope or None,
+            kind=kind or None,
+            status=status or None,
+            limit=limit,
         )
 
     # Path 2: workflow/project background (direct scope lookup, not FTS)
@@ -53,6 +55,7 @@ def dual_query_memories(
 
     if bg_scopes:
         from flow_memory.items import list_memories
+
         for bg_scope in bg_scopes:
             scope_items = list_memories(
                 scope=bg_scope,
@@ -84,5 +87,7 @@ def dual_query_memories(
 
     # Sort: "both" first, then "topic", then "background"
     priority = {"both": 0, "topic": 1, "background": 2}
-    result = sorted(merged.values(), key=lambda m: priority.get(m.get("_source", "background"), 99))
+    result = sorted(
+        merged.values(), key=lambda m: priority.get(m.get("_source", "background"), 99)
+    )
     return result[:limit]

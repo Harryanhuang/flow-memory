@@ -4,6 +4,7 @@ Stores user-level preferences and habits that should be injected into every
 agent session, regardless of which agent is running. All values are strings;
 structured data (lists/maps) is serialized as JSON with value_type='json'.
 """
+
 from __future__ import annotations
 
 import json
@@ -50,7 +51,9 @@ def set_profile(
     if not key or len(key) > _MAX_KEY_LEN:
         raise ValueError(f"key must be 1-{_MAX_KEY_LEN} chars")
     if value_type not in _VALID_VALUE_TYPES:
-        raise ValueError(f"invalid value_type: {value_type} (valid: {sorted(_VALID_VALUE_TYPES)})")
+        raise ValueError(
+            f"invalid value_type: {value_type} (valid: {sorted(_VALID_VALUE_TYPES)})"
+        )
     if not 0.0 <= confidence <= 1.0:
         raise ValueError(f"confidence must be 0.0-1.0, got {confidence}")
 
@@ -73,6 +76,7 @@ def set_profile(
     # Phase 3: record profile write
     try:
         from flow_memory.memory.usage_stats import record_write
+
         record_write(kind=f"profile:{value_type}", scope=f"profile:{key}")
     except Exception:
         pass

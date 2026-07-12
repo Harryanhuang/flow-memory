@@ -9,6 +9,7 @@ memory_items. Supports:
 High-impact memory types (workflow_rule, role_rule, runtime_rule, decision,
 preference, handoff) require a designated reviewer to promote.
 """
+
 from __future__ import annotations
 
 import json
@@ -17,10 +18,16 @@ from datetime import datetime, timedelta, timezone
 from flow_memory.storage import get_backend
 from flow_memory import items as _items
 
-_HIGH_IMPACT_KINDS = frozenset({
-    "workflow_rule", "role_rule", "runtime_rule",
-    "decision", "preference", "handoff",
-})
+_HIGH_IMPACT_KINDS = frozenset(
+    {
+        "workflow_rule",
+        "role_rule",
+        "runtime_rule",
+        "decision",
+        "preference",
+        "handoff",
+    }
+)
 _DESIGNATED_REVIEWERS = frozenset({"manager", "hermes"})
 _DEFAULT_EXPIRY_DAYS = 90
 _HIGH_IMPACT_EXPIRY_DAYS = 30
@@ -44,7 +51,9 @@ def _next_candidate_id(now: str) -> str:
 
 def _default_expires_at(now: str, kind: str = "") -> str:
     dt = datetime.fromisoformat(now)
-    days = _HIGH_IMPACT_EXPIRY_DAYS if kind in _HIGH_IMPACT_KINDS else _DEFAULT_EXPIRY_DAYS
+    days = (
+        _HIGH_IMPACT_EXPIRY_DAYS if kind in _HIGH_IMPACT_KINDS else _DEFAULT_EXPIRY_DAYS
+    )
     return (dt + timedelta(days=days)).isoformat()
 
 
@@ -101,17 +110,25 @@ def add_candidate(
             reviewed_by, reviewed_at, expires_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'proposed', '', '', ?)""",
         (
-            cid, source_type, source_ref, layer,
-            scope, kind, content.strip(), reason,
+            cid,
+            source_type,
+            source_ref,
+            layer,
+            scope,
+            kind,
+            content.strip(),
+            reason,
             json.dumps(evidence_refs or []),
             json.dumps(risk_flags or []),
-            now, expires_at,
+            now,
+            expires_at,
         ),
     )
     conn.commit()
     # Phase 3: record write event
     try:
         from flow_memory.memory.usage_stats import record_write
+
         record_write(kind=kind, scope=scope, memory_id=cid)
     except Exception:
         pass
@@ -192,7 +209,9 @@ def promote_candidate(
     if cand is None:
         raise ValueError(f"candidate not found: {candidate_id}")
     if cand["review_status"] != "proposed":
-        raise ValueError(f"candidate {candidate_id} is not in 'proposed' status (current: {cand['review_status']})")
+        raise ValueError(
+            f"candidate {candidate_id} is not in 'proposed' status (current: {cand['review_status']})"
+        )
     is_high_impact = cand["proposed_kind"] in _HIGH_IMPACT_KINDS
     reviewer_norm = str(reviewer or "").strip()
     # Hermes-specific guard: Hermes can promote non-high-impact kinds
@@ -206,10 +225,10 @@ def promote_candidate(
         )
     if reviewer_norm == "hermes" and not hermes_can_promote:
         raise ValueError(
-            f"reviewer 'hermes' requires the hermes_can_promote flag "
-            f"(set on the dispatch task description as "
-            f"'--hermes-can-promote'). Without the flag, only "
-            f"manager can promote."
+            "reviewer 'hermes' requires the hermes_can_promote flag "
+            "(set on the dispatch task description as "
+            "'--hermes-can-promote'). Without the flag, only "
+            "manager can promote."
         )
     # Defense-in-depth: even with the flag, only candidates whose scope
     # or source_type indicates a Hermes-owned context are eligible.
@@ -268,6 +287,7 @@ def promote_candidate(
     # Sync vector index explicitly (add_memory also does it; this is defensive)
     try:
         from flow_memory.vector_store import index_memory
+
         created = _items.get_memory(mid)
         if created:
             index_memory(
@@ -288,7 +308,9 @@ def promote_candidate(
     return mid
 
 
-def reject_candidate(candidate_id: str, *, reviewer: str = "", reason: str = "") -> bool:
+def reject_candidate(
+    candidate_id: str, *, reviewer: str = "", reason: str = ""
+) -> bool:
     """Set review_status='rejected'. Returns True if found and changed."""
     get_backend().init_schema()
     conn = get_backend().connect()

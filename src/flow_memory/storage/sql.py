@@ -5,9 +5,9 @@ Provides a `StorageBackend` ABC with three implementations:
   - PostgresBackend (optional, requires psycopg)
   - MarkdownBackend (filesystem-backed, git-trackable)
 """
+
 from __future__ import annotations
 
-import json
 import sqlite3
 import threading
 from abc import ABC, abstractmethod
@@ -223,7 +223,9 @@ class SqliteBackend(StorageBackend):
     def __init__(self, db_path: Path | None = None) -> None:
         from flow_memory.storage.paths import get_path_provider
 
-        self._db_path = Path(db_path) if db_path else get_path_provider().memory_db_file()
+        self._db_path = (
+            Path(db_path) if db_path else get_path_provider().memory_db_file()
+        )
         self._local = threading.local()
 
     def _get_conn(self):
@@ -318,6 +320,7 @@ class MarkdownBackend(StorageBackend):
     def __init__(self, root: Path | None = None) -> None:
         if root is None:
             from flow_memory.storage.paths import get_path_provider
+
             root = get_path_provider().obsidian_root() / "flow_memory"
         self._root = Path(root)
         self._root.mkdir(parents=True, exist_ok=True)

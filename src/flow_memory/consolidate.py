@@ -3,6 +3,7 @@
 Detects semantically similar confirmed memories using vector search and
 provides CLI operations to merge them with audit trail.
 """
+
 from __future__ import annotations
 
 import json
@@ -76,15 +77,17 @@ def find_similar_pairs(
             seen.add(pair_key)
             # Look up the other item from our local list (avoid extra SQLite hit)
             other = next((x for x in items if x.get("id") == other_id), None)
-            pairs.append({
-                "id_a": pair_key[0],
-                "id_b": pair_key[1],
-                "score": score,
-                "content_a": item.get("content", "")[:200],
-                "content_b": other["content"][:200] if other else "",
-                "scope": item.get("scope", ""),
-                "kind": item.get("kind", ""),
-            })
+            pairs.append(
+                {
+                    "id_a": pair_key[0],
+                    "id_b": pair_key[1],
+                    "score": score,
+                    "content_a": item.get("content", "")[:200],
+                    "content_b": other["content"][:200] if other else "",
+                    "scope": item.get("scope", ""),
+                    "kind": item.get("kind", ""),
+                }
+            )
             if len(pairs) >= limit_pairs:
                 break
         if len(pairs) >= limit_pairs:
@@ -116,8 +119,12 @@ def merge_memories(
     get_backend().init_schema()
     conn = get_backend().connect()
 
-    keep = conn.execute("SELECT * FROM memory_items WHERE id = ?", (keep_id,)).fetchone()
-    drop = conn.execute("SELECT * FROM memory_items WHERE id = ?", (drop_id,)).fetchone()
+    keep = conn.execute(
+        "SELECT * FROM memory_items WHERE id = ?", (keep_id,)
+    ).fetchone()
+    drop = conn.execute(
+        "SELECT * FROM memory_items WHERE id = ?", (drop_id,)
+    ).fetchone()
     if keep is None:
         raise ValueError(f"keep_id not found: {keep_id}")
     if drop is None:
@@ -159,6 +166,7 @@ def merge_memories(
     # Create supersedes link
     try:
         from flow_memory.links import add_link
+
         add_link(keep_id, drop_id, "supersedes")
     except Exception:
         pass
@@ -168,6 +176,7 @@ def merge_memories(
     # Remove from vector index
     try:
         from flow_memory.vector_store import remove_from_index
+
         remove_from_index(drop_id)
     except Exception:
         pass

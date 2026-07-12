@@ -1,4 +1,5 @@
 """Tests for flow_memory.candidates generic helpers."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone, timedelta
@@ -8,12 +9,15 @@ from flow_memory import candidates
 
 def test_candidate_status_summary_counts_sources_and_kinds(fresh_backend):
     candidates.add_candidate(
-        scope="team", kind="workflow_rule",
+        scope="team",
+        kind="workflow_rule",
         content="Retry code-repair when same test fails twice",
-        source_type="loop_repair_cycle", source_ref="loop:L-000001",
+        source_type="loop_repair_cycle",
+        source_ref="loop:L-000001",
     )
     candidates.add_candidate(
-        scope="team", kind="role_rule",
+        scope="team",
+        kind="role_rule",
         content="Manager must approve high-risk handoffs",
         source_type="manual",
     )
@@ -28,7 +32,8 @@ def test_candidate_status_summary_counts_sources_and_kinds(fresh_backend):
 
 def test_candidate_status_summary_flags_placeholder(fresh_backend):
     candidates.add_candidate(
-        scope="team", kind="note",
+        scope="team",
+        kind="note",
         content="pin me",
         source_type="manual",
     )
@@ -38,7 +43,8 @@ def test_candidate_status_summary_flags_placeholder(fresh_backend):
 
 def test_candidate_status_summary_counts_expiring_soon(fresh_backend):
     cid = candidates.add_candidate(
-        scope="team", kind="note",
+        scope="team",
+        kind="note",
         content="Short-lived reminder",
         source_type="manual",
     )

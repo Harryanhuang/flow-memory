@@ -12,6 +12,7 @@ Public API:
 
 Usage log location: <state_dir>/usage.jsonl (one line per event).
 """
+
 from __future__ import annotations
 
 import json
@@ -45,7 +46,9 @@ def _detect_source() -> str:
     )
 
 
-def _append_event(event_type: str, source: str, kind: str, scope: str, memory_id: str | None = None) -> None:
+def _append_event(
+    event_type: str, source: str, kind: str, scope: str, memory_id: str | None = None
+) -> None:
     """Append one event line to the usage log. Best-effort, never raises."""
     if event_type not in _EVENT_TYPES:
         return
@@ -182,7 +185,9 @@ def render_stats_report(stats: dict) -> str:
         lines.append("_No usage events recorded yet._")
         lines.append("")
         lines.append("Events are written to `<state_dir>/usage.jsonl`.")
-        lines.append("Run any memory command (search, items add, etc.) to generate events.")
+        lines.append(
+            "Run any memory command (search, items add, etc.) to generate events."
+        )
         return "\n".join(lines)
 
     lines.append(f"**Total writes**: {total_w}")

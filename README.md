@@ -41,9 +41,16 @@ project, Flow Memory is designed to be:
 
 ## Installation
 
-### Option 1: Install from GitHub (current)
+### Option 1: Install from PyPI
 
-PyPI release is pending. Install directly from the GitHub repo:
+```bash
+pip install flow-memory
+pip install flow-memory[mcp]      # + MCP server
+pip install flow-memory[vector]   # + LanceDB
+pip install flow-memory[all]      # everything
+```
+
+### Option 2: Install from GitHub
 
 ```bash
 # Clone the repo
@@ -66,16 +73,7 @@ pip install -e ".[all]"       # everything (recommended for development)
 
 **Requirements**: Python 3.10+
 
-### Option 2: Install from PyPI (when published)
-
-```bash
-pip install flow-memory
-pip install flow-memory[mcp]      # + MCP server
-pip install flow-memory[vector]   # + LanceDB
-pip install flow-memory[all]      # everything
-```
-
-Track PyPI release: https://github.com/Harryanhuang/flow-memory/releases
+PyPI package: https://pypi.org/project/flow-memory/
 
 ---
 
@@ -99,7 +97,7 @@ flow-memory profile set output_language bilingual
 flow-memory items add team workflow_rule "Always use plan mode before implementing" --importance 8
 
 # Start MCP server (for Claude Code / Codex)
-flow-memory mcp
+flow-mcp
 ```
 
 ---
@@ -156,42 +154,19 @@ flow-memory items get MI-20260630-001
 # Search
 flow-memory search "closeout" --hybrid       # FTS + Vector
 flow-memory search "closeout" --scope team   # scoped
-flow-memory recall --subject ap-calc-bc       # subject hierarchy
 
-# Pin / decay / consolidate (V3)
+# Pin a memory
 flow-memory pin MI-20260630-001
-flow-memory pin list
-flow-memory decay dry-run
-flow-memory consolidate --report --threshold 0.85
 
 # User profile
 flow-memory profile list
 flow-memory profile set output_language bilingual
 
-# Sensitive data (encrypted)
-flow-memory sensitive setup          # first time
-flow-memory sensitive unlock          # 60 min
-flow-memory sensitive add team api_key "sk-..."
-flow-memory sensitive search "ssh"
-flow-memory sensitive lock
-
-# Daily summary
-flow-memory daily-summary write worker_course "today's learnings"
-flow-memory daily-summary list
-
 # Dashboard
 flow-memory dashboard --days 7
 
-# AGENTS.md generation
-flow-memory agents-md --scope team --write AGENTS.md
-
-# Skill evolution
-flow-memory skill-evolve report
-flow-memory skill-evolve accept MI-...
-flow-memory skill-evolve reject MI-...
-
-# Daily maintenance
-flow-memory daily
+# Usage statistics
+flow-memory stats --days 7
 ```
 
 ---

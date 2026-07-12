@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 
-from flow_memory.storage import get_backend
+from flow_memory.storage import get_backend, get_path_provider
 
 
 def _now_iso() -> str:
@@ -183,7 +183,6 @@ def merge_memories(
         "drop_content_backup": drop["content"][:500],  # backup for recovery
     }
     try:
-        from pathlib import Path
         log_path = get_path_provider().audit_log_file()
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with open(log_path, "a", encoding="utf-8") as f:

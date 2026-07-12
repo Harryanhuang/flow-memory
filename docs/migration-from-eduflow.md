@@ -63,7 +63,7 @@ pip install flow-memory
 Verify:
 ```bash
 python -c "import flow_memory; print(flow_memory.__version__)"
-# Output: 0.1.0
+# Output: 0.1.1
 ```
 
 ### Step 2: Point to existing DB
@@ -166,6 +166,6 @@ for now, dump from SQLite and import to Postgres manually).
 
 ## Support
 
-- GitHub: https://github.com/flow-memory/flow-memory/issues
+- GitHub: https://github.com/Harryanhuang/flow-memory/issues
 - Docs: https://flow-memory.readthedocs.io (future)
 - EduFlow compatibility: still maintained via shim

@@ -4,10 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flow-memory"
-version = "0.1.0"
+version = "0.1.1"
 description = "A SQLite/Postgres/file-backed memory system for AI agents with V2/V3 features (user profile, sensitive data, pin/decay, subject, dual query, dashboard, AGENTS.md generation)"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [
     { name = "Flow Memory Authors" },
@@ -42,9 +43,9 @@ flow-memory = "flow_memory.cli:main"
 flow-mcp = "flow_memory.mcp_server:main"
 
 [project.urls]
-Homepage = "https://github.com/flow-memory/flow-memory"
-Repository = "https://github.com/flow-memory/flow-memory"
-Issues = "https://github.com/flow-memory/flow-memory/issues"
+Homepage = "https://github.com/Harryanhuang/flow-memory"
+Repository = "https://github.com/Harryanhuang/flow-memory"
+Issues = "https://github.com/Harryanhuang/flow-memory/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

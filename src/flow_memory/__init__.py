@@ -36,7 +36,7 @@ from flow_memory.storage import (
     use_vector_backend,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     # Storage

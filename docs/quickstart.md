@@ -36,7 +36,7 @@ flow-memory init
 flow-memory items add team workflow_rule "Always use plan mode before implementing" --importance 8
 
 # Or add a candidate (requires review to confirm)
-flow-memory candidate add team note "Lesson learned from this session: ..."
+flow-memory candidate team note "Lesson learned from this session: ..."
 
 # Pin it to make it part of the curated core
 flow-memory pin MI-20260630-001
@@ -53,9 +53,6 @@ flow-memory search "closeout conditions"
 
 # Hybrid search (FTS + vector)
 flow-memory search "closeout" --hybrid
-
-# Search by subject (uses subject hierarchy)
-flow-memory recall --subject ap-calculus-bc
 
 # Search by scope
 flow-memory search "manager" --scope team --kind role_rule
@@ -93,35 +90,14 @@ flow-memory profile set review_style codex-7-round
 flow-memory profile list
 ```
 
-## Use Sensitive Data (Encrypted)
+## Usage Statistics
 
 ```bash
-# One-time setup (with security questions for recovery)
-flow-memory sensitive setup
-
-# Unlock for 60 minutes
-flow-memory sensitive unlock
-
-# Store encrypted sensitive data
-flow-memory sensitive add team api_key "sk-..."
-
-# Lock immediately
-flow-memory sensitive lock
-```
-
-## Daily Maintenance
-
-```bash
-# Run all maintenance (expire, budget, export)
-flow-memory daily
-
-# Or schedule with cron/launchd:
-# 0 23 * * * flow-memory daily
+flow-memory stats --days 7
 ```
 
 ## Next Steps
 
 - [Backends](backends.md) — Switch to Postgres or file-based
 - [MCP Server](mcp-server.md) — Full tool list
-- [CLI Reference](cli.md) — All commands
-- [API Reference](api.md) — Python API
+- [MCP Server](mcp-server.md) — All MCP tools

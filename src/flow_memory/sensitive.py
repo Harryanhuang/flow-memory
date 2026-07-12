@@ -19,7 +19,7 @@ import os
 import time
 from datetime import datetime, timezone
 
-from flow_memory.storage import get_backend
+from flow_memory.storage import get_backend, get_path_provider
 
 # Session timeout: 60 minutes
 SESSION_TIMEOUT_S = 3600
@@ -549,7 +549,6 @@ def _audit_log(action: str, details: dict) -> None:
         **sanitized,
     }
     try:
-        from pathlib import Path
         log_path = get_path_provider().audit_log_file()
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with open(log_path, "a", encoding="utf-8") as f:
